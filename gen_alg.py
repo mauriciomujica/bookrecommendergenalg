@@ -1,6 +1,7 @@
 import random
 from itertools import combinations
 import numpy as np
+import ast
 
 
 def initialPop(targetUser, ratings, books, M, N):
@@ -48,6 +49,17 @@ def correlationCal(pop, books):
     return fitness_scores
 
 
-def crossover(bestMem):
-    for i in range(len(bestMem), 2):
-        print(i)
+def crossover(bestMem, r):
+    newpop = []
+    c = 0
+    for i in bestMem:
+        pair = random.sample(bestMem, 2)
+        i1, i2 = [i for i in pair]
+        l1 = ast.literal_eval(i1)
+        l2 = ast.literal_eval(i2)
+        while c <= r:
+            children = random.sample(l1, 3) + random.sample(l2, 3)
+            newpop.append(children)
+            c += 1
+
+    return newpop

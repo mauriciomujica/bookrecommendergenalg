@@ -1,14 +1,14 @@
 import pandas as pd
 import gen_alg
-import random
 
 
 if __name__ == "__main__":
     books = pd.read_csv("books_data/books.csv")
     ratings = pd.read_csv("books_data/ratings.csv")
     user = 277157
-    M = 10  # Cantidad de individuos a generar
-    N = 5  # Cantidad de items dentro de los individuos
+    M = 10
+    N = 6
+    R = 6
     currentGen = 0
     maxGen = 10
     topX = 5
@@ -21,14 +21,8 @@ if __name__ == "__main__":
             k: v for k, v in sorted(d.items(), key=lambda item: item[1], reverse=True)
         }
         bestMem = list(d_sorted.keys())[0:topX]
-        newpop = gen_alg.crossover(bestMem)
+        newpop = gen_alg.crossover(bestMem, R)
 
         currentGen += 1
 
-
-parents = random.choices(bestMem, k=2)
-
-
-for i in bestMem:
-    pair = random.choices(bestMem, k=2)
-    print(pair)
+print(len(newpop))
