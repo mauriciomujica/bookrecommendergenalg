@@ -4,7 +4,7 @@ import numpy as np
 import ast
 from statistics import mean
 from math import sqrt
-
+np.set_printoptions(legacy="1.25")
 
 def initialPop(targetUser, ratings, books, M, N):
     rated_items = ratings[ratings["userID"] == targetUser]["ISBN"].tolist()
@@ -20,11 +20,7 @@ def initialPop(targetUser, ratings, books, M, N):
 
 
 def jaccardBooks(v1, v2):
-    try:
-        intersection = np.sum((v1 > 0) & (v2 > 0))
-    except ValueError:
-        print(v1)
-        print(v2)
+    intersection = np.sum((v1 > 0) & (v2 > 0))
     union = np.sum((v1 > 0) | (v2 > 0))
     return intersection / (union + intersection) if union != 0 else 0
 
@@ -111,18 +107,15 @@ def correlationCal(pop, books):
     return fitness_scores
 
 
-def crossover(bestMem):
+def crossover(bestMemdf):
     newpop = []
-    for _ in range(len(bestMem)):
-        pair = random.sample(bestMem, 2)
-        i1, i2 = [i for i in pair]
-        l1 = ast.literal_eval(i1)
-        l2 = ast.literal_eval(i2)
-        children = random.sample(l1, 3) + random.sample(l2, 3)
+    df_list = list(bestMemdf['Individual'])
+    for _ in range(len(df_list)):
+        pair = random.sample(df_list, 2)
+        children = random.sample(pair[0], 3) + random.sample(pair[1], 3)
         newpop.append(children)
 
     return newpop
-
 
 def similarityCal(ratings, newpop, user):
     sim_scores = []
