@@ -5,9 +5,9 @@ if __name__ == "__main__":
     books = pd.read_csv("books_data/books.csv")
     ratings = pd.read_csv("books_data/ratings.csv")
     user = 277157  # userID
-    M = 1000  # initial size of pop
+    M = 10000  # initial size of pop
     N = 10  # number of books inside of an individual
-    R = 0.8  # ratio of which the newpop is generated using the initialpop size
+    R = 0.5  # ratio of which the newpop is generated using the initialpop size
     currentGen = 5
     maxGen = 10
     pop = gen_alg.initialPop(user, ratings, books, M, N)
@@ -26,6 +26,9 @@ if __name__ == "__main__":
 
         pop = bestmem2_list
         currentGen += 1
-
-    print(bestMem2)
+    
+    predict_scores, psim_sc = gen_alg.predict(ratings, bestmem2_list, user)
+    df3 = pd.DataFrame(list(zip(bestmem2_list, predict_scores)), columns = ['Individual', 'Total Predicted Score'])
+    print(df3)
+    print(psim_sc)
 

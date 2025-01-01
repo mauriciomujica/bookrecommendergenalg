@@ -64,6 +64,35 @@ def psim(targetuser, flat_users, ratings):
     return psim_value
 
 
+def psim_user(u, targetuser, ratings):
+    rated_tu = list(ratings[ratings["userID"] == targetuser]["ISBN"])
+    rated_u = list(ratings[ratings["userID"] == int(u)]["ISBN"])
+    same_books = set(rated_tu).intersection(rated_u)
+    if len(same_books) > 0:
+        for book in same_books:
+            rating_tu = ratings[
+                (ratings["ISBN"] == book) & (ratings["userID"] == targetuser)
+            ]["bookRating"].values[0]
+            rating_u = ratings[
+                (ratings["ISBN"] == book) & (ratings["userID"] == u)
+            ]["bookRating"].values[0]
+            mean_tu = mean(
+                    list(ratings[ratings["userID"] == targetuser]["bookRating"])
+            )
+            mean_u = mean(list(ratings[ratings["userID"] == u]["bookRating"]))
+            numerator = (rating_tu - mean_tu) * (rating_u - mean_u)
+            denominator = sqrt((rating_tu - mean_tu) ** 2) * sqrt(
+                (rating_u - mean_u) ** 2
+            )
+            if denominator != 0:
+                psim = numerator / denominator
+                return psim
+            else:
+                return 0
+    else:
+        return 0
+
+
 def jaccardUsers(targetuser, flat_users, ratings):
     rated_targetuser = list(ratings[ratings["userID"] == targetuser]["ISBN"])
     jaccard_value = 0
@@ -135,6 +164,38 @@ def similarityCal(ratings, newpop, user):
         sim_scores.append(sim_of_ind)
 
     return sim_scores
+
+
+def predict(ratings, bestmem, targetuser):
+    predict_score = []
+    psim_sc = []
+    for individual in bestmem:
+        ind_score = []
+        for i in individual:
+            users = list(ratings[ratings['ISBN'] == i]['userID'])
+            if len(users) > 0:
+                num_sum = 0
+                psim_scores = 0
+                for u in users:
+                    rating_u = ratings[
+                        (ratings["ISBN"] == i) & (ratings["userID"] == u)
+                    ]["bookRating"].values[0]
+                    mean_u = mean(list(ratings[ratings["userID"] == u]["bookRating"]))
+                    psim_u = psim_user(u, targetuser, ratings)
+                    numerator = (rating_u - mean_u) * psim_u
+                    psim_scores += psim_u
+                    num_sum += numerator
+                book_score = num_sum / psim_scores
+                ind_score.append(book_score)
+                psim_sc.append(psim_scores)
+            else:
+                ind_score.append(0)
+        ind_total = sum(ind_score)
+        predict_score.append(ind_total)
+    
+    return predict_score, psim_sc
+
+
 
 
 # def crossover2():
