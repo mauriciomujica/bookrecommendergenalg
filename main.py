@@ -27,8 +27,8 @@ if __name__ == "__main__":
         pop = bestmem2_list
         currentGen += 1
     
-    predict_scores, psim_sc = gen_alg.predict(ratings, bestmem2_list, user)
+    predict_scores = gen_alg.predict(ratings, bestmem2_list, user)
     df3 = pd.DataFrame(list(zip(bestmem2_list, predict_scores)), columns = ['Individual', 'Total Predicted Score'])
-    print(df3)
-    print(psim_sc)
+    bestMemfinal = df3.sort_values(by = 'Total Predicted Score', ascending = False)
+    print(bestMemfinal)
 

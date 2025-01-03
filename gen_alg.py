@@ -1,7 +1,6 @@
 import random
 from itertools import combinations
 import numpy as np
-import ast
 from statistics import mean
 from math import sqrt
 np.set_printoptions(legacy="1.25")
@@ -66,7 +65,7 @@ def psim(targetuser, flat_users, ratings):
 
 def psim_user(u, targetuser, ratings):
     rated_tu = list(ratings[ratings["userID"] == targetuser]["ISBN"])
-    rated_u = list(ratings[ratings["userID"] == int(u)]["ISBN"])
+    rated_u = list(ratings[ratings["userID"] == u]["ISBN"])
     same_books = set(rated_tu).intersection(rated_u)
     if len(same_books) > 0:
         for book in same_books:
@@ -157,7 +156,7 @@ def similarityCal(ratings, newpop, user):
         try:
             flat_users = list(np.concatenate(total_users))
         except ValueError:
-            print("individual that failed: ", individual)
+            newpop.remove(individual)
         psim_ind = psim(user, flat_users, ratings)
         jac_ind = jaccardUsers(user, flat_users, ratings)
         sim_of_ind = psim_ind * jac_ind
@@ -168,14 +167,13 @@ def similarityCal(ratings, newpop, user):
 
 def predict(ratings, bestmem, targetuser):
     predict_score = []
-    psim_sc = []
     for individual in bestmem:
         ind_score = []
         for i in individual:
             users = list(ratings[ratings['ISBN'] == i]['userID'])
             if len(users) > 0:
                 num_sum = 0
-                psim_scores = 0
+                psim_scores = []
                 for u in users:
                     rating_u = ratings[
                         (ratings["ISBN"] == i) & (ratings["userID"] == u)
@@ -183,17 +181,19 @@ def predict(ratings, bestmem, targetuser):
                     mean_u = mean(list(ratings[ratings["userID"] == u]["bookRating"]))
                     psim_u = psim_user(u, targetuser, ratings)
                     numerator = (rating_u - mean_u) * psim_u
-                    psim_scores += psim_u
+                    psim_scores.append(psim_u)
                     num_sum += numerator
-                book_score = num_sum / psim_scores
+                if sum(psim_scores) > 0:
+                    book_score = num_sum / sum(psim_scores)
+                else:
+                    book_score = 0
                 ind_score.append(book_score)
-                psim_sc.append(psim_scores)
             else:
                 ind_score.append(0)
         ind_total = sum(ind_score)
         predict_score.append(ind_total)
     
-    return predict_score, psim_sc
+    return predict_score
 
 
 
