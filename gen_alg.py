@@ -135,10 +135,10 @@ def correlationCal(pop, books):
     return fitness_scores
 
 
-def crossover(bestMemdf):
+def crossover(bestMemdf, R):
     newpop = []
     df_list = list(bestMemdf['Individual'])
-    for _ in range(len(df_list)):
+    for _ in range(R):
         pair = random.sample(df_list, 2)
         children = random.sample(pair[0], 3) + random.sample(pair[1], 3)
         newpop.append(children)
@@ -159,6 +159,7 @@ def similarityCal(ratings, newpop, user):
             newpop.remove(individual)
         psim_ind = psim(user, flat_users, ratings)
         jac_ind = jaccardUsers(user, flat_users, ratings)
+        
         sim_of_ind = psim_ind * jac_ind
         sim_scores.append(sim_of_ind)
 
