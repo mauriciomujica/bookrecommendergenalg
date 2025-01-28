@@ -2,8 +2,8 @@ import pandas as pd
 import gen_alg
 
 if __name__ == "__main__":
-    books = pd.read_csv("books_data/books.csv")
-    ratings = pd.read_csv("books_data/ratings.csv")
+    books = pd.read_csv("books_data/books.csv", index_col = "ISBN").sort_index()
+    ratings = pd.read_csv("books_data/ratings.csv", index_col = "userID").sort_index()
     user = 277157  # userID
     M = 10000  # initial size of pop
     N = 10  # number of books inside of an individual

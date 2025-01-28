@@ -5,10 +5,12 @@ from statistics import mean
 from math import sqrt
 np.set_printoptions(legacy="1.25")
 
+
 def initialPop(targetUser, ratings, books, M, N):
-    rated_items = ratings[ratings["userID"] == targetUser]["ISBN"].tolist()
-    all_items = set(books["ISBN"].tolist())
-    unrated_items = list(all_items - set(rated_items))
+    rated_items = ratings.loc[targetUser]['ISBN'].tolist()
+    all_items = books.index.tolist()
+    unrated_items = list(set(all_items) - set(rated_items))
+    #sorted_items = sorted(unrated_items)
 
     population = []
     for _ in range(M):
@@ -114,16 +116,13 @@ def jaccardUsers(targetuser, flat_users, ratings):
 
 
 def correlationCal(pop, books):
-    books2 = books.set_index("ISBN")
     fitness_scores = []
 
     for z in pop:
         vectors = []
         for item in z:
-            if item in books2.index:
-                vectors.append(books2.loc[item].to_numpy())
-            else:
-                raise ValueError(f"Item '{item}' not found in the dataframe.")
+            vectors.append(books.loc[item].to_numpy())
+
         correlations = []
         for i1, i2 in combinations(range(len(vectors)), 2):
             corr = jaccardBooks(vectors[i1], vectors[i2])
