@@ -200,3 +200,18 @@ def predict(ratings, bestmem, targetuser):
 
 # def crossover2():
 # another way of doing the crossover
+
+
+#rated_items = ratings.loc[targetUser]['ISBN'].tolist()
+
+#userIDs = ratings.index.tolist()
+
+#all_users = np.concatenate([ratings.index[ratings['ISBN'] == book].values for book in rated_items])
+
+#unique_users = np.unique(all_users)
+
+"""users_df = pd.DataFrame(
+    index= all_users,
+    columns= [277157]
+    )
+    """
