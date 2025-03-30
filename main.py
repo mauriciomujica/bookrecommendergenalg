@@ -1,17 +1,21 @@
 import pandas as pd
+import numpy as np
 import gen_alg
 
 if __name__ == "__main__":
     books = pd.read_csv("books_data/books.csv", index_col = "ISBN").sort_index()
     ratings = pd.read_csv("books_data/ratings.csv", index_col = "userID").sort_index()
     user = 277157  # userID
+    rated_items = ratings.loc[user]['ISBN'].tolist()
+    userIDs = ratings.index.tolist()
+    similar_users= np.unique(np.concatenate([ratings.index[ratings['ISBN'] == book].values for book in rated_items]))
     M = 10000  # initial size of pop
     N = 10  # number of books inside of an individual
     S = 0.2
     R = 0.8  
     currentGen = 5
     maxGen = 10
-    pop = gen_alg.initialPop(user, ratings, books, M, N)
+    pop = gen_alg.initialPop(rated_items, books, M, N)
 
     while currentGen != maxGen:
         correlations = gen_alg.correlationCal(pop, books)

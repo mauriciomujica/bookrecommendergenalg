@@ -6,8 +6,7 @@ from math import sqrt
 np.set_printoptions(legacy="1.25")
 
 
-def initialPop(targetUser, ratings, books, M, N):
-    rated_items = ratings.loc[targetUser]['ISBN'].tolist()
+def initialPop(rated_items, books, M, N):
     all_items = books.index.tolist()
     unrated_items = list(set(all_items) - set(rated_items))
     #sorted_items = sorted(unrated_items)
@@ -202,16 +201,3 @@ def predict(ratings, bestmem, targetuser):
 # another way of doing the crossover
 
 
-#rated_items = ratings.loc[targetUser]['ISBN'].tolist()
-
-#userIDs = ratings.index.tolist()
-
-#all_users = np.concatenate([ratings.index[ratings['ISBN'] == book].values for book in rated_items])
-
-#unique_users = np.unique(all_users)
-
-"""users_df = pd.DataFrame(
-    index= all_users,
-    columns= [277157]
-    )
-    """
