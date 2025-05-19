@@ -5,16 +5,22 @@ import gen_alg
 if __name__ == "__main__":
     books = pd.read_csv("books_data/books.csv", index_col = "ISBN").sort_index()
     ratings = pd.read_csv("books_data/ratings.csv", index_col = "userID").sort_index()
-    user = 277157  # userID
-    rated_items = ratings.loc[user]['ISBN'].tolist()
-    userIDs = ratings.index.tolist()
+    targetUser = 277157  # userID
+    rated_items = ratings.loc[targetUser]['ISBN'].tolist()
+    #userIDs = ratings.index.tolist()
     similar_users= np.unique(np.concatenate([ratings.index[ratings['ISBN'] == book].values for book in rated_items]))
+    similar_users = np.delete(similar_users, similar_users == targetUser)
+
     M = 10000  # initial size of pop
     N = 10  # number of books inside of an individual
     S = 0.2
     R = 0.8  
-    currentGen = 5
+    currentGen = 0
     maxGen = 10
+
+    sim_df = pd.DataFrame(index = similar_users, columns = [targetUser], dtype = float)
+    sim_users = gen_alg.sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df)
+
     pop = gen_alg.initialPop(rated_items, books, M, N)
 
     while currentGen != maxGen:
@@ -23,7 +29,7 @@ if __name__ == "__main__":
         df_sorted = df.sort_values(by = 'Correlation Value', ascending = False)
         bestMem = df_sorted.iloc[:round(len(df_sorted) * S)]
         newpop = gen_alg.crossover(bestMem, int(len(df) * R))
-        similarity = gen_alg.similarityCal(ratings, newpop, user)
+        similarity = gen_alg.similarityCal(ratings, newpop, sim_users)
         df2 = pd.DataFrame(list(zip(newpop, similarity)), columns = ['Individual', 'Similarity Value'])
         df2_sorted = df2.sort_values(by = 'Similarity Value', ascending = False)
         bestMem2 = df2_sorted.iloc[:round(len(df2_sorted) * S)]
@@ -33,7 +39,7 @@ if __name__ == "__main__":
         currentGen += 1
     
     final_mem = list(nextgenpop['Individual'])
-    predict_scores = gen_alg.predict(ratings, final_mem, user)
+    predict_scores = gen_alg.predict(ratings, final_mem, targetUser)
     df3 = pd.DataFrame(list(zip(final_mem, predict_scores)), columns = ['Individual', 'Total Predicted Score'])
     bestMemfinal = df3.sort_values(by = 'Total Predicted Score', ascending = False)
     print(bestMemfinal)
