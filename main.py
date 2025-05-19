@@ -12,7 +12,7 @@ if __name__ == "__main__":
     similar_users = np.delete(similar_users, similar_users == targetUser)
 
     M = 10000  # initial size of pop
-    N = 10  # number of books inside of an individual
+    N = 5  # number of books inside of an individual
     S = 0.2
     R = 0.8  
     currentGen = 0
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         pop = nextgenpop
         currentGen += 1
     
-    final_mem = list(nextgenpop['Individual'])
+    final_mem = nextgenpop
     predict_scores = gen_alg.predict(ratings, final_mem, targetUser)
     df3 = pd.DataFrame(list(zip(final_mem, predict_scores)), columns = ['Individual', 'Total Predicted Score'])
     bestMemfinal = df3.sort_values(by = 'Total Predicted Score', ascending = False)
