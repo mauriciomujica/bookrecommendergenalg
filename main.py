@@ -16,7 +16,7 @@ if __name__ == "__main__":
     S = 0.2
     R = 0.8  
     currentGen = 0
-    maxGen = 10
+    maxGen = 5
 
     sim_df = pd.DataFrame(index = similar_users, columns = [targetUser], dtype = float)
     sim_users = gen_alg.sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df)
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         pop = nextgenpop
         currentGen += 1
     
-    final_mem = nextgenpop
+    final_mem = bestMem2
     predict_scores = gen_alg.predict(ratings, final_mem, targetUser)
     df3 = pd.DataFrame(list(zip(final_mem, predict_scores)), columns = ['Individual', 'Total Predicted Score'])
     bestMemfinal = df3.sort_values(by = 'Total Predicted Score', ascending = False)
