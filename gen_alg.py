@@ -3,34 +3,38 @@ from itertools import combinations
 import numpy as np
 from statistics import mean
 from math import sqrt
+
 np.set_printoptions(legacy="1.25")
 
 
 def sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df):
-
     for user in similar_users:
         psim = 0
 
-        rated_u = list(ratings.loc[user]['ISBN'])
+        rated_u = list(ratings.loc[user]["ISBN"])
         same_books = list(set(rated_items).intersection(rated_u))
         for book in same_books:
-            rating_u = ratings.loc[user][ratings.loc[user]['ISBN'] == book]['bookRating'].values[0]
-            rating_tu = ratings.loc[targetUser][ratings.loc[targetUser]['ISBN'] == book]['bookRating'].values[0]
-            mean_u = mean(ratings.loc[user]['bookRating'])
-            mean_tu = mean(ratings.loc[targetUser]['bookRating'])
+            rating_u = ratings.loc[user][ratings.loc[user]["ISBN"] == book][
+                "bookRating"
+            ].values[0]
+            rating_tu = ratings.loc[targetUser][
+                ratings.loc[targetUser]["ISBN"] == book
+            ]["bookRating"].values[0]
+            mean_u = mean(ratings.loc[user]["bookRating"])
+            mean_tu = mean(ratings.loc[targetUser]["bookRating"])
 
             numerator = (rating_tu - mean_tu) * (rating_u - mean_u)
             denominator = sqrt((rating_tu - mean_tu) ** 2) * sqrt(
                 (rating_u - mean_u) ** 2
             )
-            
+
             if denominator == 0:
                 value = 0
             else:
                 value = numerator / denominator
-            
+
             psim += value
-        
+
         jaccard_num = len(same_books)
         jaccard_den = len(rated_u) + len(rated_items)
 
@@ -39,14 +43,14 @@ def sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df):
         simU = psim * jaccard
 
         sim_df.at[user, targetUser] = simU
-    
+
     return sim_df
 
 
 def initialPop(rated_items, books, M, N):
     all_items = books.index.tolist()
     unrated_items = list(set(all_items) - set(rated_items))
-    #sorted_items = sorted(unrated_items)
+    # sorted_items = sorted(unrated_items)
 
     population = []
     for _ in range(M):
@@ -71,12 +75,10 @@ def psim_user(u, targetuser, ratings):
             rating_tu = ratings[
                 (ratings["ISBN"] == book) & (ratings["userID"] == targetuser)
             ]["bookRating"].values[0]
-            rating_u = ratings[
-                (ratings["ISBN"] == book) & (ratings["userID"] == u)
-            ]["bookRating"].values[0]
-            mean_tu = mean(
-                    list(ratings[ratings["userID"] == targetuser]["bookRating"])
-            )
+            rating_u = ratings[(ratings["ISBN"] == book) & (ratings["userID"] == u)][
+                "bookRating"
+            ].values[0]
+            mean_tu = mean(list(ratings[ratings["userID"] == targetuser]["bookRating"]))
             mean_u = mean(list(ratings[ratings["userID"] == u]["bookRating"]))
             numerator = (rating_tu - mean_tu) * (rating_u - mean_u)
             denominator = sqrt((rating_tu - mean_tu) ** 2) * sqrt(
@@ -112,27 +114,29 @@ def correlationCal(pop, books):
 
 def crossover(bestMemdf, R):
     newpop = []
-    df_list = list(bestMemdf['Individual'])
+    df_list = list(bestMemdf["Individual"])
     for _ in range(R):
         pair = random.sample(df_list, 2)
         children = random.sample(pair[0], 3) + random.sample(pair[1], 3)
-        newpop.append(children)
+        if children not in newpop:
+            newpop.append(children)
 
     return newpop
+
 
 def similarityCal(ratings, newpop, sim_users):
     sim_scores = []
     for individual in newpop:
         total_users = []
         for i in individual:
-            users = list(ratings.index[ratings['ISBN'] == i])
+            users = list(ratings.index[ratings["ISBN"] == i])
             if len(users) > 0:
                 total_users.append(users)
         try:
             flat_users = list(np.concatenate(total_users))
         except ValueError:
             newpop.remove(individual)
-        
+
         filtered_users = [user for user in flat_users if user in sim_users.index]
         sim_value = 0
 
@@ -143,18 +147,18 @@ def similarityCal(ratings, newpop, sim_users):
             for user in filtered_users:
                 value = sim_users.loc[user].values[0]
                 sim_value += value
-        
+
         sim_scores.append(sim_value)
 
     return sim_scores
-        
+
 
 def predict(ratings, bestmem, targetuser):
     predict_score = []
     for individual in bestmem:
         ind_score = []
         for i in individual:
-            users = list(ratings[ratings['ISBN'] == i]['userID'])
+            users = list(ratings[ratings["ISBN"] == i]["userID"])
             if len(users) > 0:
                 num_sum = 0
                 psim_scores = []
@@ -176,13 +180,9 @@ def predict(ratings, bestmem, targetuser):
                 ind_score.append(0)
         ind_total = sum(ind_score)
         predict_score.append(ind_total)
-    
+
     return predict_score
-
-
 
 
 # def crossover2():
 # another way of doing the crossover
-
-
