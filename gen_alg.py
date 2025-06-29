@@ -111,16 +111,19 @@ def correlationCal(pop, books):
 
     return fitness_scores
 
-
 def crossover(bestMemdf, R):
     newpop = []
     df_list = list(bestMemdf["Individual"])
     for _ in range(R):
         pair = random.sample(df_list, 2)
-        children = random.sample(pair[0], 3) + random.sample(pair[1], 3)
-        if children not in newpop:
-            newpop.append(children)
-
+        # Combine and shuffle books from both parents
+        combined_books = list(set(pair[0] + pair[1]))
+        # Ensure we have enough unique books to sample
+        if len(combined_books) >= 6:
+            children = random.sample(combined_books, 6)
+            if children not in newpop:
+                newpop.append(children)
+        # If not enough unique books, skip this crossover
     return newpop
 
 
@@ -153,36 +156,34 @@ def similarityCal(ratings, newpop, sim_users):
     return sim_scores
 
 
-def predict(ratings, bestmem, targetuser):
+def predict(ratings, sim_users, final_mem, targetUser):
     predict_score = []
-    for individual in bestmem:
-        ind_score = []
+    df_list = list(final_mem["Individual"])
+
+    mean_tu = mean(ratings.loc[targetUser]['bookRating'])
+
+    for individual in df_list:
+        predict_value = 0
         for i in individual:
-            users = list(ratings[ratings["ISBN"] == i]["userID"])
-            if len(users) > 0:
-                num_sum = 0
-                psim_scores = []
-                for u in users:
-                    rating_u = ratings[
-                        (ratings["ISBN"] == i) & (ratings["userID"] == u)
-                    ]["bookRating"].values[0]
-                    mean_u = mean(list(ratings[ratings["userID"] == u]["bookRating"]))
-                    psim_u = psim_user(u, targetuser, ratings)
-                    numerator = (rating_u - mean_u) * psim_u
-                    psim_scores.append(psim_u)
-                    num_sum += numerator
-                if sum(psim_scores) > 0:
-                    book_score = num_sum / sum(psim_scores)
-                else:
-                    book_score = 0
-                ind_score.append(book_score)
-            else:
-                ind_score.append(0)
-        ind_total = sum(ind_score)
-        predict_score.append(ind_total)
+            users = list(ratings.index[ratings['ISBN'] == i])
+            filtered_users = [user for user in users if user in sim_users.index]
+            if not filtered_users:
+                continue
+            for user in filtered_users:
+                try:
+                    rating_u = ratings.loc[user][ratings.loc[user]['ISBN'] == i]['bookRating'].values[0]
+                except IndexError:
+                    continue
+                mean_u = mean(ratings.loc[user]['bookRating'])
+                sim_value = sim_users.loc[user].values[0]
+                if sim_value == 0:
+                    continue
+                numerator = (rating_u - mean_u) * sim_value
+                result = mean_tu + numerator / sim_value
+                predict_value += result
+        predict_score.append(predict_value)
 
     return predict_score
-
 
 # def crossover2():
 # another way of doing the crossover
