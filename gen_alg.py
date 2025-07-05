@@ -65,34 +65,6 @@ def jaccardBooks(v1, v2):
     union = np.sum((v1 > 0) | (v2 > 0))
     return intersection / (union + intersection) if union != 0 else 0
 
-
-def psim_user(u, targetuser, ratings):
-    rated_tu = list(ratings[ratings["userID"] == targetuser]["ISBN"])
-    rated_u = list(ratings[ratings["userID"] == u]["ISBN"])
-    same_books = set(rated_tu).intersection(rated_u)
-    if len(same_books) > 0:
-        for book in same_books:
-            rating_tu = ratings[
-                (ratings["ISBN"] == book) & (ratings["userID"] == targetuser)
-            ]["bookRating"].values[0]
-            rating_u = ratings[(ratings["ISBN"] == book) & (ratings["userID"] == u)][
-                "bookRating"
-            ].values[0]
-            mean_tu = mean(list(ratings[ratings["userID"] == targetuser]["bookRating"]))
-            mean_u = mean(list(ratings[ratings["userID"] == u]["bookRating"]))
-            numerator = (rating_tu - mean_tu) * (rating_u - mean_u)
-            denominator = sqrt((rating_tu - mean_tu) ** 2) * sqrt(
-                (rating_u - mean_u) ** 2
-            )
-            if denominator != 0:
-                psim = numerator / denominator
-                return psim
-            else:
-                return 0
-    else:
-        return 0
-
-
 def correlationCal(pop, books):
     fitness_scores = []
 
@@ -184,6 +156,3 @@ def predict(ratings, sim_users, final_mem, targetUser):
         predict_score.append(predict_value)
 
     return predict_score
-
-# def crossover2():
-# another way of doing the crossover
