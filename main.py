@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import gen_alg
 
+pd.set_option("display.max_colwidth", None)
 if __name__ == "__main__":
     books = pd.read_csv("books_data/books.csv", index_col="ISBN").sort_index()
     ratings = pd.read_csv("books_data/ratings.csv", index_col="userID").sort_index()
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     sim_users = gen_alg.sim_matrix(
         targetUser, rated_items, ratings, similar_users, sim_df
     )
-
+    ratings_filtered = ratings.loc[ratings.index.isin(sim_users.index)]
     pop = gen_alg.initialPop(rated_items, books, M, N)
 
     while currentGen != maxGen:
@@ -37,7 +38,7 @@ if __name__ == "__main__":
         df_sorted = df.sort_values(by="Correlation Value", ascending=False)
         bestMem = df_sorted.iloc[: round(len(df_sorted) * S)]
         newpop = gen_alg.crossover(bestMem, int(len(df) * R))
-        similarity = gen_alg.similarityCal(ratings, newpop, sim_users)
+        similarity = gen_alg.similarityCal(ratings_filtered, newpop, sim_users)
         df2 = pd.DataFrame(
             list(zip(newpop, similarity)), columns=["Individual", "Similarity Value"]
         )
@@ -51,7 +52,10 @@ if __name__ == "__main__":
     final_mem = bestMem2
     predict_scores = gen_alg.predict(ratings, sim_users, final_mem, targetUser)
     df3 = pd.DataFrame(
-        {"Individual": list(final_mem['Individual']), "Total Predicted Score": predict_scores}
+        {
+            "Individual": list(final_mem["Individual"]),
+            "Total Predicted Score": predict_scores,
+        }
     )
     bestMemfinal = df3.sort_values(by="Total Predicted Score", ascending=False)
     print(bestMemfinal)

@@ -65,6 +65,7 @@ def jaccardBooks(v1, v2):
     union = np.sum((v1 > 0) | (v2 > 0))
     return intersection / (union + intersection) if union != 0 else 0
 
+
 def correlationCal(pop, books):
     fitness_scores = []
 
@@ -82,6 +83,7 @@ def correlationCal(pop, books):
         fitness_scores.append(fitness_value)
 
     return fitness_scores
+
 
 def crossover(bestMemdf, R):
     newpop = []
@@ -102,29 +104,17 @@ def crossover(bestMemdf, R):
 def similarityCal(ratings, newpop, sim_users):
     sim_scores = []
     for individual in newpop:
-        total_users = []
-        for i in individual:
-            users = list(ratings.index[ratings["ISBN"] == i])
-            if len(users) > 0:
-                total_users.append(users)
-        try:
-            flat_users = list(np.concatenate(total_users))
-        except ValueError:
-            newpop.remove(individual)
-
-        filtered_users = [user for user in flat_users if user in sim_users.index]
         sim_value = 0
-
-        if len(filtered_users) == 0:
-            value = 0
-            sim_value += value
-        else:
-            for user in filtered_users:
-                value = sim_users.loc[user].values[0]
-                sim_value += value
-
+        for book in individual:
+            if book not in ratings["ISBN"].values:
+                sim_value += 0
+            else:
+                users = list(ratings.index[ratings["ISBN"] == book])
+                filtered_users = [user for user in users if user in sim_users.index]
+                for user in filtered_users:
+                    value = sim_users.loc[user].values[0]
+                    sim_value += value
         sim_scores.append(sim_value)
-
     return sim_scores
 
 
@@ -132,21 +122,23 @@ def predict(ratings, sim_users, final_mem, targetUser):
     predict_score = []
     df_list = list(final_mem["Individual"])
 
-    mean_tu = mean(ratings.loc[targetUser]['bookRating'])
+    mean_tu = mean(ratings.loc[targetUser]["bookRating"])
 
     for individual in df_list:
         predict_value = 0
         for i in individual:
-            users = list(ratings.index[ratings['ISBN'] == i])
+            users = list(ratings.index[ratings["ISBN"] == i])
             filtered_users = [user for user in users if user in sim_users.index]
             if not filtered_users:
                 continue
             for user in filtered_users:
                 try:
-                    rating_u = ratings.loc[user][ratings.loc[user]['ISBN'] == i]['bookRating'].values[0]
+                    rating_u = ratings.loc[user][ratings.loc[user]["ISBN"] == i][
+                        "bookRating"
+                    ].values[0]
                 except IndexError:
                     continue
-                mean_u = mean(ratings.loc[user]['bookRating'])
+                mean_u = mean(ratings.loc[user]["bookRating"])
                 sim_value = sim_users.loc[user].values[0]
                 if sim_value == 0:
                     continue
