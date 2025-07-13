@@ -1,14 +1,13 @@
 import pandas as pd
 import numpy as np
 import gen_alg
+import cProfile
 
-pd.set_option("display.max_colwidth", None)
-if __name__ == "__main__":
+def main():
     books = pd.read_csv("books_data/books.csv", index_col="ISBN").sort_index()
     ratings = pd.read_csv("books_data/ratings.csv", index_col="userID").sort_index()
     targetUser = 277157  # userID
     rated_items = ratings.loc[targetUser]["ISBN"].tolist()
-    # userIDs = ratings.index.tolist()
     similar_users = np.unique(
         np.concatenate(
             [ratings.index[ratings["ISBN"] == book].values for book in rated_items]
@@ -28,6 +27,11 @@ if __name__ == "__main__":
         targetUser, rated_items, ratings, similar_users, sim_df
     )
     ratings_filtered = ratings.loc[ratings.index.isin(sim_users.index)]
+    ratings_filtered_grouped = ratings_filtered.reset_index().groupby(['ISBN', 'userID'])
+    ratings_filtered_grouped_df = ratings_filtered_grouped.first()
+    ratings_filtered_grouped_df = ratings_filtered_grouped_df.reset_index().set_index(['ISBN', 'userID'])
+    c = ratings_filtered_grouped_df.index.get_level_values(0)
+    c = np.array(c)
     pop = gen_alg.initialPop(rated_items, books, M, N)
 
     while currentGen != maxGen:
@@ -38,7 +42,7 @@ if __name__ == "__main__":
         df_sorted = df.sort_values(by="Correlation Value", ascending=False)
         bestMem = df_sorted.iloc[: round(len(df_sorted) * S)]
         newpop = gen_alg.crossover(bestMem, int(len(df) * R))
-        similarity = gen_alg.similarityCal(ratings_filtered, newpop, sim_users)
+        similarity = gen_alg.similarityCal(ratings_filtered_grouped_df, newpop, sim_users, c)
         df2 = pd.DataFrame(
             list(zip(newpop, similarity)), columns=["Individual", "Similarity Value"]
         )
@@ -59,3 +63,6 @@ if __name__ == "__main__":
     )
     bestMemfinal = df3.sort_values(by="Total Predicted Score", ascending=False)
     print(bestMemfinal)
+
+if __name__ == "__main__":
+    cProfile.run("main()", sort='ncalls')

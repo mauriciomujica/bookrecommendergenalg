@@ -101,19 +101,19 @@ def crossover(bestMemdf, R):
     return newpop
 
 
-def similarityCal(ratings, newpop, sim_users):
+def similarityCal(ratings, newpop, sim_users, c):
     sim_scores = []
     for individual in newpop:
         sim_value = 0
         for book in individual:
-            if book not in ratings["ISBN"].values:
-                sim_value += 0
-            else:
-                users = list(ratings.index[ratings["ISBN"] == book])
-                filtered_users = [user for user in users if user in sim_users.index]
-                for user in filtered_users:
+            if book in c:
+                users = ratings.xs(book, level = 'ISBN').index
+                #if users.size != 0:
+                for user in users:
                     value = sim_users.loc[user].values[0]
                     sim_value += value
+            else:
+                sim_value += 0
         sim_scores.append(sim_value)
     return sim_scores
 
