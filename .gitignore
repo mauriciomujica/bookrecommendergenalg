@@ -8,5 +8,6 @@ ModelizadoGenAlg.code-workspace
 test.py
 check_books.py
 books_data_og
-optimization.py
+optimization*
 profile_output*
+program*

@@ -60,44 +60,43 @@ def initialPop(rated_items, books, M, N):
     return population
 
 
-def jaccardBooks(v1, v2):
-    intersection = np.sum((v1 > 0) & (v2 > 0))
-    union = np.sum((v1 > 0) | (v2 > 0))
-    return intersection / (union + intersection) if union != 0 else 0
+def get_vectors(column, books):
+    vectors = books.loc[column].to_numpy()
+    return vectors
 
 
-def correlationCal(pop, books):
-    fitness_scores = []
+def correlationCal(book_vectors, N):
 
-    for z in pop:
-        vectors = []
-        for item in z:
-            vectors.append(books.loc[item].to_numpy())
+    correlations = []
+    for i, j in combinations(range(N), 2):
+        A = book_vectors[i]
+        B = book_vectors[j]
 
-        correlations = []
-        for i1, i2 in combinations(range(len(vectors)), 2):
-            corr = jaccardBooks(vectors[i1], vectors[i2])
-            correlations.append(corr)
+        intersection = np.sum(A & B, axis=1)
+        union = np.sum(A | B, axis=1)
 
-        fitness_value = sum(correlations)
-        fitness_scores.append(fitness_value)
+        corr = np.divide(
+            intersection,
+            intersection + union,
+            out=np.zeros_like(intersection, dtype=float),
+            where=(intersection + union) != 0
+        )
+        correlations.append(corr)
 
-    return fitness_scores
+    total_correlation = np.sum(correlations, axis=0)
+    return total_correlation
 
 
-def crossover(bestMemdf, R):
+def crossover(bestMemdf, R, N):
     newpop = []
     df_list = list(bestMemdf["Individual"])
     for _ in range(R):
         pair = random.sample(df_list, 2)
-        # Combine and shuffle books from both parents
         combined_books = list(set(pair[0] + pair[1]))
-        # Ensure we have enough unique books to sample
-        if len(combined_books) >= 6:
-            children = random.sample(combined_books, 6)
+        if len(combined_books) >= N:
+            children = random.sample(combined_books, N)
             if children not in newpop:
                 newpop.append(children)
-        # If not enough unique books, skip this crossover
     return newpop
 
 

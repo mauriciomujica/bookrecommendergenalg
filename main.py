@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
 import gen_alg
-import cProfile
 
-def main():
+if __name__ == "__main__":
     books = pd.read_csv("books_data/books.csv", index_col="ISBN").sort_index()
     ratings = pd.read_csv("books_data/ratings.csv", index_col="userID").sort_index()
     targetUser = 277157  # userID
@@ -35,13 +34,28 @@ def main():
     pop = gen_alg.initialPop(rated_items, books, M, N)
 
     while currentGen != maxGen:
-        correlations = gen_alg.correlationCal(pop, books)
-        df = pd.DataFrame(
-            list(zip(pop, correlations)), columns=["Individual", "Correlation Value"]
-        )
+        df = pd.DataFrame(pop, columns=[f'Book_{i+1}' for i in range(N)])
+        
+        column_1 = df['Book_1']
+        column_2 = df['Book_2']
+        column_3 = df['Book_3']
+        column_4 = df['Book_4']
+        column_5 = df['Book_5']
+
+        books1 = gen_alg.get_vectors(column_1, books)
+        books2 = gen_alg.get_vectors(column_2, books)
+        books3 = gen_alg.get_vectors(column_3, books)
+        books4 = gen_alg.get_vectors(column_4, books)
+        books5 = gen_alg.get_vectors(column_5, books)
+
+
+        correlations = gen_alg.correlationCal([books1, books2, books3, books4, books5], N)
+        df['Correlation Value'] = correlations
         df_sorted = df.sort_values(by="Correlation Value", ascending=False)
         bestMem = df_sorted.iloc[: round(len(df_sorted) * S)]
         newpop = gen_alg.crossover(bestMem, int(len(df) * R))
+
+        
         similarity = gen_alg.similarityCal(ratings_filtered_grouped_df, newpop, sim_users, c)
         df2 = pd.DataFrame(
             list(zip(newpop, similarity)), columns=["Individual", "Similarity Value"]
@@ -63,6 +77,3 @@ def main():
     )
     bestMemfinal = df3.sort_values(by="Total Predicted Score", ascending=False)
     print(bestMemfinal)
-
-if __name__ == "__main__":
-    cProfile.run("main()", sort='ncalls')
