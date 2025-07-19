@@ -4,9 +4,6 @@ import numpy as np
 from statistics import mean
 from math import sqrt
 
-np.set_printoptions(legacy="1.25")
-
-
 def sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df):
     for user in similar_users:
         psim = 0
@@ -60,13 +57,15 @@ def initialPop(rated_items, books, M, N):
     return population
 
 
-def get_vectors(column, books):
-    vectors = books.loc[column].to_numpy()
-    return vectors
+def get_vectors(df, books):
+    book_vectors = []
+    for col in df.columns:
+        vectors = books.loc[df[col]].to_numpy()
+        book_vectors.append(vectors)
+    return book_vectors
 
 
 def correlationCal(book_vectors, N):
-
     correlations = []
     for i, j in combinations(range(N), 2):
         A = book_vectors[i]
@@ -89,9 +88,10 @@ def correlationCal(book_vectors, N):
 
 def crossover(bestMemdf, R, N):
     newpop = []
-    df_list = list(bestMemdf["Individual"])
+    columns = bestMemdf.iloc[:, :N]
+    collist = columns.values.tolist()
     for _ in range(R):
-        pair = random.sample(df_list, 2)
+        pair = random.sample(collist, 2)
         combined_books = list(set(pair[0] + pair[1]))
         if len(combined_books) >= N:
             children = random.sample(combined_books, N)

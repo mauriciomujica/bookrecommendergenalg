@@ -32,34 +32,17 @@ if __name__ == "__main__":
     c = ratings_filtered_grouped_df.index.get_level_values(0)
     c = np.array(c)
     pop = gen_alg.initialPop(rated_items, books, M, N)
+    df = pd.DataFrame(pop, columns=[f'Book_{i+1}' for i in range(N)])
 
     while currentGen != maxGen:
-        df = pd.DataFrame(pop, columns=[f'Book_{i+1}' for i in range(N)])
-        
-        column_1 = df['Book_1']
-        column_2 = df['Book_2']
-        column_3 = df['Book_3']
-        column_4 = df['Book_4']
-        column_5 = df['Book_5']
-
-        books1 = gen_alg.get_vectors(column_1, books)
-        books2 = gen_alg.get_vectors(column_2, books)
-        books3 = gen_alg.get_vectors(column_3, books)
-        books4 = gen_alg.get_vectors(column_4, books)
-        books5 = gen_alg.get_vectors(column_5, books)
-
-
-        correlations = gen_alg.correlationCal([books1, books2, books3, books4, books5], N)
+        book_vectors = gen_alg.get_vectors(df, books)
+        correlations = gen_alg.correlationCal(book_vectors, N)
         df['Correlation Value'] = correlations
         df_sorted = df.sort_values(by="Correlation Value", ascending=False)
         bestMem = df_sorted.iloc[: round(len(df_sorted) * S)]
         newpop = gen_alg.crossover(bestMem, int(len(df) * R))
-
-        
+        df2 = pd.DataFrame(newpop, columns=[f'Book_{i+1}' for i in range(N)])        
         similarity = gen_alg.similarityCal(ratings_filtered_grouped_df, newpop, sim_users, c)
-        df2 = pd.DataFrame(
-            list(zip(newpop, similarity)), columns=["Individual", "Similarity Value"]
-        )
         df2_sorted = df2.sort_values(by="Similarity Value", ascending=False)
         bestMem2 = df2_sorted.iloc[: round(len(df2_sorted) * S)]
         nextgenpop = gen_alg.crossover(bestMem2, int(len(df) * R))
