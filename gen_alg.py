@@ -4,6 +4,7 @@ import numpy as np
 from statistics import mean
 from math import sqrt
 
+
 def sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df):
     for user in similar_users:
         psim = 0
@@ -47,7 +48,6 @@ def sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df):
 def initialPop(rated_items, books, M, N):
     all_items = books.index.tolist()
     unrated_items = list(set(all_items) - set(rated_items))
-    # sorted_items = sorted(unrated_items)
 
     population = []
     for _ in range(M):
@@ -65,6 +65,19 @@ def get_vectors(df, books):
     return book_vectors
 
 
+def book_similarity(ratings_filtered, ratings_filtered_isbn, sim_df):
+    sim_scores = []
+    for book in ratings_filtered_isbn:
+        sim_score2 = 0
+        users = ratings_filtered[ratings_filtered["ISBN"] == book]["userID"].values
+        for user in users:
+            value = float(sim_df.loc[user].values[0])
+            sim_score2 += value
+        sim_scores.append(sim_score2)
+
+    return sim_scores
+
+
 def correlationCal(book_vectors, N):
     correlations = []
     for i, j in combinations(range(N), 2):
@@ -78,7 +91,7 @@ def correlationCal(book_vectors, N):
             intersection,
             intersection + union,
             out=np.zeros_like(intersection, dtype=float),
-            where=(intersection + union) != 0
+            where=(intersection + union) != 0,
         )
         correlations.append(corr)
 
@@ -100,20 +113,16 @@ def crossover(bestMemdf, R, N):
     return newpop
 
 
-def similarityCal(ratings, newpop, sim_users, c):
-    sim_scores = []
-    for individual in newpop:
-        sim_value = 0
-        for book in individual:
-            if book in c:
-                users = ratings.xs(book, level = 'ISBN').index
-                #if users.size != 0:
-                for user in users:
-                    value = sim_users.loc[user].values[0]
-                    sim_value += value
-            else:
-                sim_value += 0
-        sim_scores.append(sim_value)
+def similarityCal(book_sim, dic_sim, df2):
+    final_array = []
+    for column in df2.columns:
+        book_series = df2[column]
+        sc = np.where(np.isin(book_series, book_sim.index), book_series.map(dic_sim), 0)
+        final_array.append(sc)
+
+    final_array = np.array(final_array)
+    sim_scores = np.sum(final_array, axis=0)
+
     return sim_scores
 
 
