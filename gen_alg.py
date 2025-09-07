@@ -45,6 +45,16 @@ def sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df):
     return sim_df
 
 
+def mean_users(similar_users, ratings_filtered):
+    mean_list = []
+    for user in similar_users:
+        mean_u = mean(
+            ratings_filtered[ratings_filtered["userID"] == user]["bookRating"]
+        )
+        mean_list.append(mean_u)
+    return mean_list
+
+
 def initialPop(rated_items, books, M, N):
     all_items = books.index.tolist()
     unrated_items = list(set(all_items) - set(rated_items))
@@ -60,7 +70,10 @@ def initialPop(rated_items, books, M, N):
 def get_vectors(df, books):
     book_vectors = []
     for col in df.columns:
-        vectors = books.loc[df[col]].to_numpy()
+        try: 
+            vectors = books.loc[df[col]].to_numpy()
+        except KeyError:
+            print(df)
         book_vectors.append(vectors)
     return book_vectors
 
@@ -126,33 +139,41 @@ def similarityCal(book_sim, dic_sim, df2):
     return sim_scores
 
 
-def predict(ratings, sim_users, final_mem, targetUser):
-    predict_score = []
-    df_list = list(final_mem["Individual"])
-
+def calc_predic(book_series, ratings, targetUser, isbn_to_userid, ratings_filtered, sim_df):
+    pr_scores = np.zeros(len(book_series))
     mean_tu = mean(ratings.loc[targetUser]["bookRating"])
-
-    for individual in df_list:
-        predict_value = 0
-        for i in individual:
-            users = list(ratings.index[ratings["ISBN"] == i])
-            filtered_users = [user for user in users if user in sim_users.index]
-            if not filtered_users:
+    for idx, isbn in enumerate(book_series):
+        users = isbn_to_userid.get(isbn, [])
+        if not users:
+            continue
+        score = 0
+        for u in users:
+            rating_u_arr = ratings_filtered[
+                (ratings_filtered['userID'] == u) & (ratings_filtered["ISBN"] == isbn)
+            ]['bookRating'].values
+            if len(rating_u_arr) == 0:
                 continue
-            for user in filtered_users:
-                try:
-                    rating_u = ratings.loc[user][ratings.loc[user]["ISBN"] == i][
-                        "bookRating"
-                    ].values[0]
-                except IndexError:
-                    continue
-                mean_u = mean(ratings.loc[user]["bookRating"])
-                sim_value = sim_users.loc[user].values[0]
-                if sim_value == 0:
-                    continue
-                numerator = (rating_u - mean_u) * sim_value
-                result = mean_tu + numerator / sim_value
-                predict_value += result
-        predict_score.append(predict_value)
+            rating_u = rating_u_arr[0]
+            mean_u = sim_df.loc[int(u)]['mean']
+            sim_u = sim_df.loc[int(u)][targetUser]
+            if sim_u == 0:
+                continue
+            numerator = (rating_u - mean_u) * sim_u
+            result = mean_tu + numerator / sim_u
+            score += result
+        pr_scores[idx] = score
+    return pr_scores
 
-    return predict_score
+
+def predict(df, ratings_filtered_isbn, ratings, targetUser, isbn_to_userid, ratings_filtered, sim_df):
+    final_array = []
+
+    for column in df.columns:
+        book_series = df[column]
+        array = np.where(np.isin(book_series, ratings_filtered_isbn), calc_predic(book_series, ratings, targetUser, isbn_to_userid, ratings_filtered, sim_df), 0)
+        final_array.append(array)
+    
+    final_array = np.array(final_array)
+    predict_scores = np.sum(final_array, axis=0)
+
+    return predict_scores

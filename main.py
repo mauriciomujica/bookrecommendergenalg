@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from collections import defaultdict
 import gen_alg
 
 if __name__ == "__main__":
@@ -25,22 +26,30 @@ if __name__ == "__main__":
     sim_users = gen_alg.sim_matrix(
         targetUser, rated_items, ratings, similar_users, sim_df
     )
+
     ratings_filtered = ratings.loc[ratings.index.isin(sim_users.index)].reset_index()
     ratings_filtered_isbn = ratings_filtered["ISBN"].to_numpy()
     ratings_sim_score = gen_alg.book_similarity(
         ratings_filtered, ratings_filtered_isbn, sim_df
     )
+    means = gen_alg.mean_users(similar_users, ratings_filtered)
+    sim_users["mean"] = means
 
     book_sim = pd.DataFrame(
         list(zip(ratings_filtered_isbn, ratings_sim_score)),
         columns=["ISBN", "sim_score"],
     ).set_index("ISBN")
     dic_sim = dict(zip(ratings_filtered_isbn, ratings_sim_score))
+    isbn_to_userid = defaultdict(list)
+    for isbn, userid in zip(
+    ratings_filtered["ISBN"], ratings_filtered["userID"]):
+        isbn_to_userid[isbn].append(userid)
+
 
     pop = gen_alg.initialPop(rated_items, books, M, N)
-    df = pd.DataFrame(pop, columns=[f"Book_{i + 1}" for i in range(N)])
 
     while currentGen != maxGen:
+        df = pd.DataFrame(pop, columns=[f"Book_{i + 1}" for i in range(N)])
         book_vectors = gen_alg.get_vectors(df, books)
         correlations = gen_alg.correlationCal(book_vectors, N)
         df["Correlation Value"] = correlations
@@ -52,18 +61,17 @@ if __name__ == "__main__":
         df2["Similarity Value"] = sim_scores.tolist()
         df2_sorted = df2.sort_values(by="Similarity Value", ascending=False)
         bestMem2 = df2_sorted.iloc[: round(len(df2_sorted) * S)]
-        nextgenpop = gen_alg.crossover(bestMem2, int(len(df) * R))
+        nextgenpop = gen_alg.crossover(bestMem2, int(len(df) * R), N)
 
         pop = nextgenpop
+        print(f"Generación {currentGen + 1} completada.\n")
         currentGen += 1
 
     final_mem = bestMem2
-    predict_scores = gen_alg.predict(ratings, sim_users, final_mem, targetUser)
-    df3 = pd.DataFrame(
-        {
-            "Individual": list(final_mem["Individual"]),
-            "Total Predicted Score": predict_scores,
-        }
-    )
-    bestMemfinal = df3.sort_values(by="Total Predicted Score", ascending=False)
+    df3 = final_mem.copy()
+    df3.drop(['Similarity Value'], axis = 1, inplace = True)
+    pr = gen_alg.predict(df3, ratings_filtered_isbn, ratings, targetUser, isbn_to_userid, ratings_filtered, sim_df)
+
+    df3['Predict Score'] = pr.tolist()
+    bestMemfinal = df3.sort_values(by="Predict Score", ascending=False)
     print(bestMemfinal)
