@@ -1,14 +1,9 @@
 __pycache__
 .ipynb_checkpoints
 books_data_backup
-check_data.py
-practice.ipynb
-practice.py
 ModelizadoGenAlg.code-workspace
-test.py
-check_books.py
 books_data_og
-optimization*
 profile_output*
 program*
 .vscode
+tests
