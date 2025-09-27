@@ -1,11 +1,18 @@
+import sys
 import pandas as pd
 import numpy as np
 from collections import defaultdict
 import gen_alg
+import return_names
 
 if __name__ == "__main__":
-    books = pd.read_csv("books_data/books.csv", index_col="ISBN").sort_index()
-    ratings = pd.read_csv("books_data/ratings.csv", index_col="userID").sort_index()
+    try:
+        books = pd.read_csv("books_data/books.csv", index_col="ISBN").sort_index()
+        ratings = pd.read_csv("books_data/ratings.csv", index_col="userID").sort_index()
+    except FileNotFoundError:
+        print("No se encuentran los datasets. Ejecutar download_data.py primero")
+        sys.exit()
+
     targetUser = 277157  # userID
     rated_items = ratings.loc[targetUser]["ISBN"].tolist()
     similar_users = np.unique(
@@ -74,4 +81,4 @@ if __name__ == "__main__":
 
     df3['Predict Score'] = pr.tolist()
     bestMemfinal = df3.sort_values(by="Predict Score", ascending=False)
-    print(bestMemfinal)
+    return_names.get_names(bestMemfinal, N)

@@ -10,6 +10,11 @@ def sim_matrix(targetUser, rated_items, ratings, similar_users, sim_df):
         psim = 0
 
         rated_u = list(ratings.loc[user]["ISBN"])
+        #if isinstance(rated_u, str):
+        #    rated_u = rated_u.split()
+        #else:
+        #    rated_u = list(rated_u)
+        
         same_books = list(set(rated_items).intersection(rated_u))
         for book in same_books:
             rating_u = ratings.loc[user][ratings.loc[user]["ISBN"] == book][
