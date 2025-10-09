@@ -1,0 +1,83 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recomendador Musketeers</title>
+    <link rel="stylesheet" href="./css/estilos.css">
+    <link rel="icon" href="./assets/img/icon.ico">
+
+
+</head>
+<body>
+    <div class = "banner" id="home">
+        <div class = "navbar">
+            <div class = "icono">
+                <a href="index.html"><img src="./assets/img/logo.png" alt="Logo Empresa"></a>
+                <a href="index.html"><span title="Recomendador amigo">Musketeers</span></a>
+            </div>
+            <ul>
+                <li><a href="./index.html">Inicio</a></li>
+                <li><a href="./pages/nosotros.html">Nosotros</a></li>
+                <li><a href="./pages/contact.html">Contacto</a></li>
+            </ul>
+        </div>
+    </div>
+    <div id="main-buttons" style="text-align: center; margin: 20px;">
+        <button id="dataset-button">Dataset</button>
+        <button id="chatbot-button">Chatbot</button>
+    </div>
+
+    <div id="dataset-section" style="display: none;">
+        <!-- Placeholder for Dataset content -->
+        <form id="dataset-form" style="text-align: center; margin: 20px;">
+            <label for="csv-search">Search User ID:</label>
+            <input type="text" id="csv-search" name="csv-search" placeholder="Enter User ID">
+            <button type="submit">Search</button>
+        </form>
+        <div id="dataset-results" style="margin-top: 20px; text-align: center;">
+            <!-- Results will be displayed here -->
+        </div>
+        <div id="dataset-selection" style="margin-top: 10px; text-align: center;"></div>
+    </div>
+
+    <div id="chatbot-section" style="display: none;">
+        <div id="chat-output">
+        <div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>
+        </div>
+        <br>
+        <textarea id="mensaje" name="mensaje" placeholder="  Deja aquí tu mensaje o consulta"></textarea>
+        <div class="error" id="errorMensaje"></div>
+        <button id="enviarMensaje">Enviar</button>
+        </div>
+
+    </div>       
+        
+    </div>
+    <div class="contact">
+        <h2>Encontranos en:</h2>
+            
+        <div class="contact-iconos">
+            <div class="icon">
+                <img src="./assets/img/tel.png" alt="Telefono icon">
+                <p>+5491119999777</p>
+            </div>
+            <div class="icon">
+                <img src="./assets/img/correo.png" alt="mail icon">
+                <p>Musketeers@gmail.com</p>
+            </div>
+            <div class="icon">
+                <img src="./assets/img/fb.png" alt="facebook icon">
+                <p>facebook.com/Musketeers</p>
+            </div>
+            <div class="icon">
+                <img src="./assets/img/inst.png" alt="instagram icon">
+                <p>instagram.com/Musketeers</p>
+            </div>
+        </div>
+        <br>
+        <h4 id="volver"><a href="#home">Volver al inicio</a></h3>
+    </div>
+
+    <script src="/js/chatbot.js"></script>
+</body>
+</html>
