@@ -7,4 +7,4 @@ profile_output*
 program*
 .vscode
 tests
-.scripts/.env
+web_app/.env
