@@ -2,7 +2,8 @@ import os
 import gdown
 import zipfile
 
-def download_and_extract_from_gdrive(file_id, output_dir="books_data"):
+
+def download_and_extract_from_gdrive(file_id, output_dir="../books_data"):
     """
     Download a zip file from Google Drive using gdown and extract it.
     """
