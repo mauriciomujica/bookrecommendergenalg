@@ -3,12 +3,12 @@ import sys
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from ..core import gen_alg, return_names
+from ...core import gen_alg, return_names
 
 
-def main():
+def main(selected, userid):
     try:
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         books_path = os.path.join(base_dir, "books_data", "books.csv")
         ratings_path = os.path.join(base_dir, "books_data", "ratings.csv")
         books = pd.read_csv(books_path, index_col="ISBN").sort_index()
@@ -18,14 +18,12 @@ def main():
         print(books_path)
         sys.exit()
 
-    targetUser = 277157  # userID
-    rated_items = ratings.loc[targetUser]["ISBN"].tolist()
     similar_users = np.unique(
         np.concatenate(
-            [ratings.index[ratings["ISBN"] == book].values for book in rated_items]
+            [ratings.index[ratings["ISBN"] == book].values for book in selected]
         )
     )
-    similar_users = np.delete(similar_users, similar_users == targetUser)
+    similar_users = np.delete(similar_users, similar_users == userid)
 
     M = 10000
     N = 5
@@ -34,10 +32,9 @@ def main():
     currentGen = 0
     maxGen = 10
 
-    sim_df = pd.DataFrame(index=similar_users, columns=[targetUser], dtype=float)
-    sim_users = gen_alg.sim_matrix(
-        targetUser, rated_items, ratings, similar_users, sim_df
-    )
+    userid = int(userid)
+    sim_df = pd.DataFrame(index=similar_users, columns=[userid], dtype=float)
+    sim_users = gen_alg.sim_matrix(userid, selected, ratings, similar_users, sim_df)
 
     ratings_filtered = ratings.loc[ratings.index.isin(sim_users.index)].reset_index()
     ratings_filtered_isbn = ratings_filtered["ISBN"].to_numpy()
@@ -53,10 +50,10 @@ def main():
     ).set_index("ISBN")
     dic_sim = dict(zip(ratings_filtered_isbn, ratings_sim_score))
     isbn_to_userid = defaultdict(list)
-    for isbn, userid in zip(ratings_filtered["ISBN"], ratings_filtered["userID"]):
-        isbn_to_userid[isbn].append(userid)
+    for isbn, user_id in zip(ratings_filtered["ISBN"], ratings_filtered["userID"]):
+        isbn_to_userid[isbn].append(user_id)
 
-    pop = gen_alg.initialPop(rated_items, books, M, N)
+    pop = gen_alg.initialPop(selected, books, M, N)
 
     while currentGen != maxGen:
         df = pd.DataFrame(pop, columns=[f"Book_{i + 1}" for i in range(N)])
@@ -84,7 +81,7 @@ def main():
         df3,
         ratings_filtered_isbn,
         ratings,
-        targetUser,
+        userid,
         isbn_to_userid,
         ratings_filtered,
         sim_df,
@@ -94,7 +91,3 @@ def main():
     bestMemfinal = df3.sort_values(by="Predict Score", ascending=False)
     names = return_names.get_names(bestMemfinal, N)
     return names
-
-
-if __name__ == "__main__":
-    main()

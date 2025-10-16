@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 import pandas as pd
-import return_names_chatbot
+from bookrecommendergenalg.web_app.scripts_py import return_names_chatbot, web_to_alg
 
 load_dotenv()
 app = Flask(__name__)
@@ -91,8 +91,8 @@ def search_csv():
 
     try:
         # Determina dinámicamente la ruta absoluta al CSV
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, "../bookrecommendergenalg/books_data/ratings.csv")
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        csv_path = os.path.join(base_dir, "books_data", "ratings.csv")
 
         df = pd.read_csv(csv_path, index_col="userID").sort_index()
         rated_items = df.loc[int(user_id)]["ISBN"].tolist()
@@ -107,32 +107,39 @@ def search_csv():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/selected', methods=['POST'])
+@app.route("/selected", methods=["POST"])
 def receive_selected():
-    """Receive a JSON payload with a 'selected' list and do basic validation.
+    """Receive a JSON payload with a 'selected' list and 'userid'.
     Returns a simple confirmation JSON. This endpoint is intentionally lightweight;
     you can extend it to perform further actions (store to DB, trigger jobs, etc.).
     """
     try:
         data = request.get_json()
-        if not data or 'selected' not in data:
-            return jsonify({'error': "Request JSON must include a 'selected' list"}), 400
+        if not data or "selected" not in data or "userid" not in data:
+            return jsonify(
+                {"error": "Request JSON must include 'selected' list and 'userid'"}
+            ), 400
 
-        selected = data.get('selected')
+        selected = data.get("selected")
+        userid = data.get("userid")
+
         if not isinstance(selected, list):
-            return jsonify({'error': "'selected' must be a list"}), 400
+            return jsonify({"error": "'selected' must be a list"}), 400
 
         # Basic sanitization: ensure items are strings
         cleaned = [str(x) for x in selected]
 
+        # Use userid in the processing logic
+        bestMem = web_to_alg.main(cleaned, userid)
+
         # TODO: replace this with real processing (save to DB, pass to pipeline, etc.)
         # For now just return a confirmation with count
-        return jsonify({'status': 'ok', 'count': len(cleaned), 'selected': cleaned})
+        return jsonify({"results": bestMem})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
     # Ejecuta el servidor en el puerto 5000
 
-    app.run(debug = True, port=5000)
+    app.run(debug=True, port=5000)

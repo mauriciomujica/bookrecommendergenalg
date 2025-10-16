@@ -84,11 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/search-csv?user_id=${encodeURIComponent(userId)}`);
             if (response.ok) {
                 const data = await response.json();
-                if (data.results && data.results.length > 0) {
-                    // Create checkbox list
-                    const listHtml = data.results.map((item, idx) => {
-                        const label = (typeof item === 'string') ? item : JSON.stringify(item);
-                        return `<div class="checkbox-item"><label><input type="checkbox" data-index="${idx}" value="${escapeHtml(label)}"> ${escapeHtml(label)}</label></div>`;
+                if (data.results && Object.keys(data.results).length > 0) {
+                    // Create checkbox list from object values (titles), with keys (ISBNs) as values
+                    const results = Object.entries(data.results);
+                    const listHtml = results.map(([isbn, title], idx) => {
+                        return `<div class="checkbox-item"><label><input type="checkbox" data-index="${idx}" value="${escapeHtml(isbn)}"> ${escapeHtml(title)}</label></div>`;
                     }).join('');
 
                     datasetResults.innerHTML = `<div class="checkbox-list">${listHtml}</div>`;
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const resp = await fetch('/selected', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ selected: chosen })
+                                body: JSON.stringify({ selected: chosen, userid: userId }) // Include userid in the payload
                             });
                             const j = await resp.json();
                             selectionContainer.innerHTML = `<pre>${escapeHtml(JSON.stringify(j, null, 2))}</pre>`;
