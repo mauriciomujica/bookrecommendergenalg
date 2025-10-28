@@ -25,7 +25,7 @@ def main(selected, userid):
     )
     similar_users = np.delete(similar_users, similar_users == userid)
 
-    M = 10000
+    M = len(selected) * 1000
     N = 5
     S = 0.2
     R = 0.8

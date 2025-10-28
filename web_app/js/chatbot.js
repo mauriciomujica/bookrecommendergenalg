@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const selectAllBtn = document.createElement('button');
                     selectAllBtn.type = 'button';
                     selectAllBtn.id = 'select-all';
-                    selectAllBtn.textContent = 'Select all';
+                    selectAllBtn.textContent = 'Seleccionar todo';
                     selectAllBtn.addEventListener('click', () => {
                         datasetResults.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
                     });
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const deselectAllBtn = document.createElement('button');
                     deselectAllBtn.type = 'button';
                     deselectAllBtn.id = 'deselect-all';
-                    deselectAllBtn.textContent = 'Deselect all';
+                    deselectAllBtn.textContent = 'Deseleccionar todo';
                     deselectAllBtn.addEventListener('click', () => {
                         datasetResults.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
                     });
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const sendBtn = document.createElement('button');
                     sendBtn.type = 'button';
                     sendBtn.id = 'send-selected';
-                    sendBtn.textContent = 'Send selected to server';
+                    sendBtn.textContent = 'Obtener recomendaciones';
                     sendBtn.addEventListener('click', async () => {
                         const checked = Array.from(datasetResults.querySelectorAll('input[type="checkbox"]:checked'));
                         const chosen = checked.map(cb => cb.value);
@@ -158,55 +158,97 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Function to display book recommendations with synopses in chatbot format
+    // Function to display book recommendations in a card with navigation
     function displayRecommendations(books, container) {
-        let html = '<div class="recommendations-chat">';
-        html += '<div class="asistente">¡Aquí tienes mis recomendaciones personalizadas basadas en tus gustos!</div>';
+        if (!books || books.length === 0) {
+            container.innerHTML = '<p>No recommendations available.</p>';
+            return;
+        }
 
-        books.forEach((book, index) => {
-            const title = escapeHtml(book.title || `Libro ${index + 1}`);
+        let currentIndex = 0;
+
+        function updateDisplay() {
+            const book = books[currentIndex];
+            const title = escapeHtml(book.title || `Libro ${currentIndex + 1}`);
             const synopsis = escapeHtml(book.synopsis || 'Sinopsis no disponible');
 
-            html += `<div class="usuario"><strong>Recomendación ${index + 1}:</strong> ${title}</div>`;
-            if (synopsis !== 'Sinopsis no disponible') {
-                html += `<div class="asistente">${synopsis}</div>`;
-            }
-        });
+            const html = `
+                <div class="recommendation-card">
+                    <div class="card-header">
+                        <h3>Recomendación ${currentIndex + 1} de ${books.length}</h3>
+                    </div>
+                    <div class="card-content">
+                        <h4>${title}</h4>
+                        <p>${synopsis}</p>
+                    </div>
+                    <div class="card-navigation">
+                        <button id="prev-btn" ${currentIndex === 0 ? 'disabled' : ''}>Anterior</button>
+                        <button id="next-btn" ${currentIndex === books.length - 1 ? 'disabled' : ''}>Siguiente</button>
+                    </div>
+                </div>
+                <style>
+                    .recommendation-card {
+                        max-width: 500px;
+                        margin: 20px auto;
+                        padding: 20px;
+                        background-color: #fff;
+                        border-radius: 10px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        text-align: center;
+                    }
+                    .card-header h3 {
+                        margin: 0 0 15px 0;
+                        color: #201f56;
+                    }
+                    .card-content h4 {
+                        margin: 0 0 10px 0;
+                        color: #333;
+                    }
+                    .card-content p {
+                        line-height: 1.5;
+                        color: #555;
+                    }
+                    .card-navigation {
+                        margin-top: 20px;
+                    }
+                    .card-navigation button {
+                        background-color: #2d6cdf;
+                        color: #fff;
+                        border: none;
+                        border-radius: 6px;
+                        padding: 10px 15px;
+                        margin: 0 5px;
+                        cursor: pointer;
+                        transition: background-color 0.3s ease;
+                    }
+                    .card-navigation button:hover:not(:disabled) {
+                        background-color: #1a4e96;
+                    }
+                    .card-navigation button:disabled {
+                        background-color: #ccc;
+                        cursor: not-allowed;
+                    }
+                </style>
+            `;
 
-        html += '<div class="asistente">¿Te gustaría más información sobre alguno de estos libros o nuevas recomendaciones?</div>';
-        html += '</div>';
+            container.innerHTML = html;
 
-        // Add CSS styles for the chat-like appearance
-        html += `
-        <style>
-            .recommendations-chat {
-                max-width: 600px;
-                margin: 20px auto;
-                padding: 15px;
-                background-color: #f9f9f9;
-                border-radius: 10px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-            .recommendations-chat > div {
-                margin: 10px 0;
-                padding: 10px;
-                border-radius: 8px;
-                line-height: 1.4;
-            }
-            .recommendations-chat .asistente {
-                background-color: #e3f2fd;
-                text-align: left;
-                margin-left: 20px;
-            }
-            .recommendations-chat .usuario {
-                background-color: #fff3e0;
-                text-align: right;
-                margin-right: 20px;
-                font-weight: bold;
-            }
-        </style>`;
+            // Add event listeners after setting innerHTML
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateDisplay();
+                }
+            });
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (currentIndex < books.length - 1) {
+                    currentIndex++;
+                    updateDisplay();
+                }
+            });
+        }
 
-        container.innerHTML = html;
+        updateDisplay();
     }
 
     // Small helper to escape HTML when injecting values
