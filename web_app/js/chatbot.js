@@ -85,29 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const data = await response.json();
                 if (data.results && Object.keys(data.results).length > 0) {
-                    // Create checkbox list from object values (titles), with keys (ISBNs) as values
+                    // Create checkbox grid from object values (titles), with keys (ISBNs) as values
                     const results = Object.entries(data.results);
                     const listHtml = results.map(([isbn, title], idx) => {
                         return `<div class="checkbox-item"><label><input type="checkbox" data-index="${idx}" value="${escapeHtml(isbn)}"> ${escapeHtml(title)}</label></div>`;
                     }).join('');
 
                     datasetResults.innerHTML = `<div class="checkbox-list">${listHtml}</div>`;
-
-                    // Add a button to get selected items
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.id = 'get-selected';
-                    btn.textContent = 'Get selected';
-                    btn.addEventListener('click', () => {
-                        const checked = Array.from(datasetResults.querySelectorAll('input[type="checkbox"]:checked'));
-                        const chosen = checked.map(cb => cb.value);
-                        // Display chosen items in the selection container
-                        if (chosen.length) {
-                            selectionContainer.innerHTML = `<p>Selected (${chosen.length}):</p><ul>${chosen.map(x => `<li>${x}</li>`).join('')}</ul>`;
-                        } else {
-                            selectionContainer.innerHTML = '<p>No items selected.</p>';
-                        }
-                    });
 
                     // Add control buttons: Select all, Deselect all, Send Selected
                     const controlsHtml = document.createElement('div');
@@ -159,12 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     controlsHtml.appendChild(deselectAllBtn);
                     controlsHtml.appendChild(sendBtn);
 
-                    // Append controls after the list, before the get-selected button
+                    // Append controls after the list
                     datasetResults.appendChild(controlsHtml);
-
-                    // Append or replace existing button
-                    const existingBtn = document.getElementById('get-selected');
-                    if (existingBtn) existingBtn.replaceWith(btn); else datasetResults.appendChild(btn);
 
                 } else {
                     datasetResults.innerHTML = '<p>No results found for the given User ID.</p>';
