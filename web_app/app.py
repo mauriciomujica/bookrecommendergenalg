@@ -132,9 +132,35 @@ def receive_selected():
         # Use userid in the processing logic
         bestMem = web_to_alg.main(cleaned, userid)
 
-        # TODO: replace this with real processing (save to DB, pass to pipeline, etc.)
-        # For now just return a confirmation with count
-        return jsonify({"results": bestMem})
+        # Generate synopses for each recommended book using Gemini API
+        synopses = []
+        synopsis_prompt = "Genera una breve sinopsis en español (máximo 3 oraciones) para el siguiente libro. Responde solo con la sinopsis, sin títulos ni formato adicional:"
+
+        try:
+            model = genai.GenerativeModel("gemini-2.5-flash")
+
+            # bestMem is a dictionary with ISBN as key and title as value
+            for isbn, book_title in bestMem.items():
+                # Generate synopsis for each book using the title
+                full_prompt = f"{synopsis_prompt} {book_title}"
+                response = model.generate_content(full_prompt)
+                synopsis = response.text.strip()
+
+                # Add synopsis to the book data
+                synopses.append(
+                    {"isbn": isbn, "title": book_title, "synopsis": synopsis}
+                )
+
+        except Exception as e:
+            # If synopsis generation fails, return books without synopses
+            print(f"Error generating synopses: {str(e)}")
+            # Convert dictionary to list format for fallback
+            synopses = [
+                {"isbn": isbn, "title": title} for isbn, title in bestMem.items()
+            ]
+
+        # Return results with synopses
+        return jsonify({"results": synopses})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

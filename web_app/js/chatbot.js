@@ -142,8 +142,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ selected: chosen, userid: userId }) // Include userid in the payload
                             });
-                            const j = await resp.json();
-                            selectionContainer.innerHTML = `<pre>${escapeHtml(JSON.stringify(j, null, 2))}</pre>`;
+                            const data = await resp.json();
+
+                            if (resp.ok && data.results) {
+                                displayRecommendations(data.results, selectionContainer);
+                            } else {
+                                selectionContainer.innerHTML = `<p>Error: ${data.error || 'Unknown error occurred'}</p>`;
+                            }
                         } catch (err) {
                             console.error(err);
                             selectionContainer.innerHTML = '<p>Error sending selected items.</p>';
@@ -172,6 +177,57 @@ document.addEventListener('DOMContentLoaded', () => {
             datasetResults.innerHTML = '<p>Unable to connect to the server.</p>';
         }
     });
+
+    // Function to display book recommendations with synopses in chatbot format
+    function displayRecommendations(books, container) {
+        let html = '<div class="recommendations-chat">';
+        html += '<div class="asistente">¡Aquí tienes mis recomendaciones personalizadas basadas en tus gustos!</div>';
+
+        books.forEach((book, index) => {
+            const title = escapeHtml(book.title || `Libro ${index + 1}`);
+            const synopsis = escapeHtml(book.synopsis || 'Sinopsis no disponible');
+
+            html += `<div class="usuario"><strong>Recomendación ${index + 1}:</strong> ${title}</div>`;
+            if (synopsis !== 'Sinopsis no disponible') {
+                html += `<div class="asistente">${synopsis}</div>`;
+            }
+        });
+
+        html += '<div class="asistente">¿Te gustaría más información sobre alguno de estos libros o nuevas recomendaciones?</div>';
+        html += '</div>';
+
+        // Add CSS styles for the chat-like appearance
+        html += `
+        <style>
+            .recommendations-chat {
+                max-width: 600px;
+                margin: 20px auto;
+                padding: 15px;
+                background-color: #f9f9f9;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            .recommendations-chat > div {
+                margin: 10px 0;
+                padding: 10px;
+                border-radius: 8px;
+                line-height: 1.4;
+            }
+            .recommendations-chat .asistente {
+                background-color: #e3f2fd;
+                text-align: left;
+                margin-left: 20px;
+            }
+            .recommendations-chat .usuario {
+                background-color: #fff3e0;
+                text-align: right;
+                margin-right: 20px;
+                font-weight: bold;
+            }
+        </style>`;
+
+        container.innerHTML = html;
+    }
 
     // Small helper to escape HTML when injecting values
     function escapeHtml(unsafe) {
