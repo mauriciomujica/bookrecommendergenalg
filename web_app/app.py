@@ -1,9 +1,11 @@
 import os
 import google.generativeai as genai
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response
 from flask_cors import CORS
 from dotenv import load_dotenv
 import pandas as pd
+import json
+import queue
 from bookrecommendergenalg.web_app.scripts_py import return_names_chatbot, web_to_alg
 
 load_dotenv()
@@ -135,7 +137,8 @@ def receive_selected():
         # Generate synopses for each recommended book using Gemini API
         synopses = []
         synopsis_prompt = "Genera una breve sinopsis en español (máximo 3 oraciones) para el siguiente libro. Responde solo con la sinopsis, sin títulos ni formato adicional:"
-
+        print("Generando sinopsis de los libros finales con Gemini...")
+        web_to_alg.progress_callback(0, 0, "generating_synopses")
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
 
@@ -160,9 +163,22 @@ def receive_selected():
             ]
 
         # Return results with synopses
+        web_to_alg.progress_callback(0, 0, "complete")
         return jsonify({"results": synopses})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/progress")
+def progress():
+    def generate():
+        while True:
+            try:
+                progress_data = web_to_alg.progress_queue.get(timeout=1)
+                yield f"data: {json.dumps(progress_data)}\n\n"
+            except queue.Empty:
+                continue
+    return Response(generate(), mimetype='text/event-stream')
 
 
 def start_server(debug: bool = True, port: int = 5000):

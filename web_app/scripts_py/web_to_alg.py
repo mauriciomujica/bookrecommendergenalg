@@ -4,7 +4,26 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 from ...core import gen_alg, return_names
+import queue
 
+
+# Global queue for progress updates
+progress_queue = queue.Queue()
+
+def progress_callback(generation, max_gen, stage="generation"):
+    if stage == "generation":
+        progress = int((generation / max_gen) * 80)  # Generations take 80% of progress
+        progress_queue.put({'progress': progress, 'message': f'Generación {generation} completada.'})
+    elif stage == "predicting":
+        progress_queue.put({'progress': 85, 'message': 'Prediciendo los mejores libros...'})
+    elif stage == "prediction_done":
+        progress_queue.put({'progress': 90, 'message': 'Predicción terminada'})
+    elif stage == "fetching_names":
+        progress_queue.put({'progress': 95, 'message': 'Buscando información de los libros...'})
+    elif stage == "generating_synopses":
+        progress_queue.put({'progress': 97, 'message': 'Generando sinopsis de los libros finales con Gemini...'})
+    elif stage == "complete":
+        progress_queue.put({'progress': 100, 'message': 'Recomendaciones listas.'})
 
 def main(selected, userid):
     try:
@@ -72,11 +91,16 @@ def main(selected, userid):
 
         pop = nextgenpop
         print(f"Generación {currentGen + 1} completada.\n")
+        progress_callback(currentGen + 1, maxGen)
         currentGen += 1
 
     final_mem = bestMem2
     df3 = final_mem.copy()
     df3.drop(["Similarity Value"], axis=1, inplace=True)
+
+    print("Prediciendo los mejores libros...")
+    progress_callback(0, 0, "predicting")
+
     pr = gen_alg.predict(
         df3,
         ratings_filtered_isbn,
@@ -87,7 +111,14 @@ def main(selected, userid):
         sim_df,
     )
 
+    print("Predicción terminada")
+    progress_callback(0, 0, "prediction_done")
+
     df3["Predict Score"] = pr.tolist()
     bestMemfinal = df3.sort_values(by="Predict Score", ascending=False)
+
+    print("Buscando información de los libros...")
+    progress_callback(0, 0, "fetching_names")
     names = return_names.get_names(bestMemfinal, N)
+    # Don't send complete here, let app.py handle the final stages
     return names

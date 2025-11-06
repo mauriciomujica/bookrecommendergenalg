@@ -22,22 +22,37 @@
             </ul>
         </div>
     </div>
-    <div id="main-buttons" style="text-align: center; margin: 20px;">
+    <div id="welcome-section" style="text-align: center; margin: 50px;">
+        <h1>Bienvenido/a, ingrese su numero de usuario</h1>
+        <form id="welcome-form">
+            <input type="text" id="user-id" placeholder="Número de usuario" required>
+            <button type="submit">Continuar</button>
+        </form>
+    </div>
+    <div id="main-buttons" style="text-align: center; margin: 20px; display: none;">
         <button id="dataset-button">Dataset</button>
         <button id="chatbot-button">Chatbot</button>
     </div>
 
     <div id="dataset-section" style="display: none;">
         <!-- Placeholder for Dataset content -->
-        <form id="dataset-form" style="text-align: center; margin: 20px;">
-            <label for="csv-search">Buscar ID del usuario:</label>
-            <input type="text" id="csv-search" name="csv-search" placeholder="Ingrese ID del usuario">
-            <button type="submit">Buscar</button>
-        </form>
+        <div style="text-align: center; margin: 20px;">
+            <button id="back-button">Volver al inicio</button>
+        </div>
         <div id="dataset-results" style="margin-top: 20px; text-align: center;">
             <!-- Results will be displayed here -->
         </div>
+        <div id="loading-container" class="loading-container" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Cargando libros...</p>
+        </div>
         <div id="dataset-selection" style="margin-top: 10px; text-align: center;"></div>
+        <div id="progress-container" style="display: none; margin: 20px auto; max-width: 400px;">
+            <div id="progress-bar" style="width: 100%; background-color: #f0f0f0; border-radius: 10px; overflow: hidden;">
+                <div id="progress-fill" style="width: 0%; height: 20px; background-color: #2d6cdf; transition: width 0.3s ease;"></div>
+            </div>
+            <p id="progress-text" style="text-align: center; margin-top: 10px;">Procesando...</p>
+        </div>
     </div>
 
     <div id="chatbot-section" style="display: none;">

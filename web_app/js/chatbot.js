@@ -8,7 +8,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatbotSection = document.getElementById('chatbot-section');
     const datasetForm = document.getElementById('dataset-form');
     const datasetResults = document.getElementById('dataset-results');
-    
+    const welcomeForm = document.getElementById('welcome-form');
+    const welcomeSection = document.getElementById('welcome-section');
+    const mainButtons = document.getElementById('main-buttons');
+    const backButton = document.getElementById('back-button');
+    const loadingContainer = document.getElementById('loading-container');
+    const progressContainer = document.getElementById('progress-container');
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    let currentUserId = null;
+    let eventSource = null;
+
+    // Handle welcome form submission
+    welcomeForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userId = document.getElementById('user-id').value.trim();
+        if (!userId) {
+            alert('Por favor, ingrese un número de usuario.');
+            return;
+        }
+        currentUserId = userId;
+        welcomeSection.style.display = 'none';
+        mainButtons.style.display = 'block';
+        datasetSection.style.display = 'block';
+        chatbotSection.style.display = 'none';
+
+        // Auto-load dataset for the user
+        await loadDataset(userId);
+    });
+
     function agregarMensaje(texto, clase, esHTML = false) {
     const div = document.createElement('div');
     div.className = clase;
@@ -68,17 +96,25 @@ document.addEventListener('DOMContentLoaded', () => {
         chatbotSection.style.display = 'block';
     });
 
-    datasetForm.addEventListener('submit', async (event) => {
-        event.preventDefault(); // Prevent form submission
+    backButton.addEventListener('click', () => {
+        welcomeSection.style.display = 'block';
+        mainButtons.style.display = 'none';
+        datasetSection.style.display = 'none';
+        chatbotSection.style.display = 'none';
+        datasetResults.innerHTML = '';
+        document.getElementById('dataset-selection').innerHTML = '';
+        document.getElementById('user-id').value = '';
+        currentUserId = null;
+    });
 
-        const userId = document.getElementById('csv-search').value.trim();
+    // Function to load dataset for a user
+    async function loadDataset(userId) {
         const selectionContainer = document.getElementById('dataset-selection');
         selectionContainer.innerHTML = ''; // clear previous selection UI
 
-        if (!userId) {
-            datasetResults.innerHTML = '<p>Please enter a User ID.</p>';
-            return;
-        }
+        // Show loading spinner
+        loadingContainer.style.display = 'block';
+        datasetResults.innerHTML = '';
 
         try {
             const response = await fetch(`/search-csv?user_id=${encodeURIComponent(userId)}`);
@@ -120,6 +156,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     sendBtn.addEventListener('click', async () => {
                         const checked = Array.from(datasetResults.querySelectorAll('input[type="checkbox"]:checked'));
                         const chosen = checked.map(cb => cb.value);
+
+                        // Show progress bar
+                        progressContainer.style.display = 'block';
+                        progressFill.style.width = '0%';
+                        progressText.textContent = 'Iniciando algoritmo...';
+
+                        // Start SSE connection for progress updates
+                        eventSource = new EventSource('/progress');
+                        eventSource.onmessage = function(event) {
+                            const data = JSON.parse(event.data);
+                            progressFill.style.width = data.progress + '%';
+                            progressText.textContent = data.message;
+                            if (data.progress >= 100) {
+                                eventSource.close();
+                            }
+                        };
+
                         try {
                             const resp = await fetch('/selected', {
                                 method: 'POST',
@@ -136,6 +189,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         } catch (err) {
                             console.error(err);
                             selectionContainer.innerHTML = '<p>Error sending selected items.</p>';
+                        } finally {
+                            // Hide progress bar
+                            progressContainer.style.display = 'none';
+                            if (eventSource) {
+                                eventSource.close();
+                            }
                         }
                     });
 
@@ -155,7 +214,22 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error:', error);
             datasetResults.innerHTML = '<p>Unable to connect to the server.</p>';
+        } finally {
+            // Hide loading spinner
+            loadingContainer.style.display = 'none';
         }
+    }
+
+    datasetForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent form submission
+
+        const userId = document.getElementById('csv-search').value.trim();
+        if (!userId) {
+            datasetResults.innerHTML = '<p>Please enter a User ID.</p>';
+            return;
+        }
+
+        await loadDataset(userId);
     });
 
     // Function to display book recommendations in a card with navigation
