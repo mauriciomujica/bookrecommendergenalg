@@ -165,7 +165,11 @@ def receive_selected():
         return jsonify({"error": str(e)}), 500
 
 
+def start_server(debug: bool = True, port: int = 5000):
+    app.run(debug=True, port=5000)
+
+
 if __name__ == "__main__":
     # Ejecuta el servidor en el puerto 5000
 
-    app.run(debug=True, port=5000)
+    start_server()

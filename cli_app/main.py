@@ -93,7 +93,7 @@ def main():
     df3["Predict Score"] = pr.tolist()
     bestMemfinal = df3.sort_values(by="Predict Score", ascending=False)
     names = return_names.get_names(bestMemfinal, N)
-    return names
+    print(names)
 
 
 if __name__ == "__main__":
