@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatbotButton = document.getElementById('chatbot-button');
     const datasetSection = document.getElementById('dataset-section');
     const chatbotSection = document.getElementById('chatbot-section');
-    const datasetForm = document.getElementById('dataset-form');
+    // const datasetForm = document.getElementById('dataset-form'); // Commented out - not used
     const datasetResults = document.getElementById('dataset-results');
     const welcomeForm = document.getElementById('welcome-form');
     const welcomeSection = document.getElementById('welcome-section');
@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressText = document.getElementById('progress-text');
     let currentUserId = null;
     let eventSource = null;
+    let currentSearchType = null; // 'book' or 'author'
+    let selectedItem = null; // selected book or author
+    let optionListenersAttached = false;
 
     // Handle welcome form submission
     welcomeForm.addEventListener('submit', async (event) => {
@@ -50,6 +53,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }   
 
     enviarBoton.addEventListener('click', async () => {
+        // Check if we're in search mode (search input container is visible)
+        const searchContainer = document.getElementById('search-input-container');
+        const isSearchMode = searchContainer && searchContainer.style.display === 'block';
+
+        if (isSearchMode) {
+            // If search input is visible, treat this as a search action using the search input
+            const searchInput = document.getElementById('search-input');
+            const query = searchInput ? searchInput.value.trim() : mensajeInput.value.trim();
+
+            if (!query) {
+                alert('Por favor, escribe algo para buscar.');
+                return;
+            }
+
+            try {
+                const endpoint = currentSearchType === 'book' ? '/search-books' : '/search-authors';
+                const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (response.ok && data.results && data.results.length > 0) {
+                    // Show results as buttons
+                    const resultsHtml = data.results.map(item =>
+                        `<button class="item-option-btn" data-item="${escapeHtml(item)}">${escapeHtml(item)}</button>`
+                    ).join('');
+                    document.getElementById('item-options').innerHTML = resultsHtml;
+                    document.getElementById('item-options').style.display = 'block';
+                    if (searchInput) searchInput.value = ''; // Clear search input
+                    mensajeInput.value = ''; // Clear message input
+                } else {
+                    agregarMensaje('Asistente: No se encontraron resultados para tu búsqueda.', 'asistente');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                agregarMensaje('Asistente: Error al buscar. Inténtalo de nuevo.', 'asistente');
+            }
+            return;
+        }
+
+        // Normal Gemini chat
         const mensaje = mensajeInput.value;
         if (mensaje.trim() === '') {
             alert('Por favor, escribe un mensaje.');
@@ -94,6 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
     chatbotButton.addEventListener('click', () => {
         datasetSection.style.display = 'none';
         chatbotSection.style.display = 'block';
+        // Reset chat to initial state
+        document.getElementById('chat-output').innerHTML = '<div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>';
+        resetChatOptions();
+        attachOptionListeners();
+        document.getElementById('gemini-section').style.display = 'none'; // Hide Gemini input by default
     });
 
     backButton.addEventListener('click', () => {
@@ -220,17 +267,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    datasetForm.addEventListener('submit', async (event) => {
-        event.preventDefault(); // Prevent form submission
-
-        const userId = document.getElementById('csv-search').value.trim();
-        if (!userId) {
-            datasetResults.innerHTML = '<p>Please enter a User ID.</p>';
-            return;
-        }
-
-        await loadDataset(userId);
-    });
+    // Commented out - datasetForm is not used in current HTML
+    // datasetForm.addEventListener('submit', async (event) => {
+    //     event.preventDefault(); // Prevent form submission
+    //
+    //     const userId = document.getElementById('csv-search').value.trim();
+    //     if (!userId) {
+    //         datasetResults.innerHTML = '<p>Please enter a User ID.</p>';
+    //         return;
+    //     }
+    //
+    //     await loadDataset(userId);
+    // });
 
     // Function to display book recommendations in a card with navigation
     function displayRecommendations(books, container) {
@@ -334,4 +382,262 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
+
+    function attachOptionListeners() {
+        if (optionListenersAttached) return;
+        optionListenersAttached = true;
+
+        // Chat options handlers
+        document.getElementById('estado-pedido').addEventListener('click', () => {
+            agregarMensaje('Asistente: Estado del pedido - Esta funcionalidad estará disponible próximamente.', 'asistente');
+            resetChatOptions();
+        });
+
+        document.getElementById('locales-cercanos').addEventListener('click', () => {
+            agregarMensaje('Asistente: Locales más cercanos - Esta funcionalidad estará disponible próximamente.', 'asistente');
+            resetChatOptions();
+        });
+
+        document.getElementById('soporte').addEventListener('click', () => {
+            agregarMensaje('Asistente: Soporte - Esta funcionalidad estará disponible próximamente.', 'asistente');
+            resetChatOptions();
+        });
+
+        document.getElementById('toggle-gemini').addEventListener('click', () => {
+            const geminiSection = document.getElementById('gemini-section');
+            if (geminiSection.style.display === 'none' || geminiSection.style.display === '') {
+                geminiSection.style.display = 'block';
+            } else {
+                geminiSection.style.display = 'none';
+            }
+        });
+
+        document.getElementById('inventario').addEventListener('click', () => {
+            agregarMensaje('Asistente: Muy bien! ¿En qué estás interesado?', 'asistente');
+            // Hide the main chat options and show sub-options
+            document.getElementById('chat-options').style.display = 'none';
+            document.getElementById('sub-options').innerHTML = `
+                <button class="sub-option-btn" id="buscar-libro">Buscar por libro</button>
+                <button class="sub-option-btn" id="buscar-autor">Buscar por autor</button>
+            `;
+            document.getElementById('sub-options').style.display = 'block';
+        });
+
+    }
+
+    // Sub-options handlers - consolidated into one listener
+    document.addEventListener('click', (event) => {
+        if (event.target.id === 'buscar-libro' || (event.target.classList.contains('sub-option-btn') && event.target.id === 'buscar-libro')) {
+            console.log('Buscar libro clicked');
+            currentSearchType = 'book';
+            agregarMensaje('Asistente: Buscar por libro - Escribe el nombre del libro:', 'asistente');
+            document.getElementById('sub-options').style.display = 'none';
+            document.getElementById('search-input-container').style.display = 'block';
+            document.getElementById('search-input').placeholder = 'Escribe el nombre del libro...';
+            document.getElementById('search-input').focus();
+        } else if (event.target.id === 'buscar-autor' || (event.target.classList.contains('sub-option-btn') && event.target.id === 'buscar-autor')) {
+            console.log('Buscar autor clicked');
+            currentSearchType = 'author';
+            agregarMensaje('Asistente: Buscar por autor - Escribe el nombre del autor:', 'asistente');
+            document.getElementById('sub-options').style.display = 'none';
+            document.getElementById('search-input-container').style.display = 'block';
+            document.getElementById('search-input').placeholder = 'Escribe el nombre del autor...';
+            document.getElementById('search-input').focus();
+        }
+    });
+
+    // Search functionality with autocomplete
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+
+    searchInput.addEventListener('input', async () => {
+        const query = searchInput.value.trim();
+        if (query.length < 2) {
+            document.getElementById('search-list').innerHTML = '';
+            return;
+        }
+
+        try {
+            const endpoint = currentSearchType === 'book' ? '/search-books' : '/search-authors';
+            const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (response.ok && data.results) {
+                // Populate datalist for autocomplete
+                const datalist = document.getElementById('search-list');
+                datalist.innerHTML = data.results.map(item => `<option value="${escapeHtml(item)}">`).join('');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+    searchBtn.addEventListener('click', async () => {
+        const query = searchInput.value.trim();
+        if (!query) {
+            alert('Por favor, escribe algo para buscar.');
+            return;
+        }
+
+        try {
+            const endpoint = currentSearchType === 'book' ? '/search-books' : '/search-authors';
+            const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (response.ok && data.results && data.results.length > 0) {
+                // Show results as buttons
+                const resultsHtml = data.results.map(item =>
+                    `<button class="item-option-btn" data-item="${escapeHtml(item)}">${escapeHtml(item)}</button>`
+                ).join('');
+                document.getElementById('item-options').innerHTML = resultsHtml;
+                document.getElementById('item-options').style.display = 'block';
+            } else {
+                agregarMensaje('Asistente: No se encontraron resultados para tu búsqueda.', 'asistente');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            agregarMensaje('Asistente: Error al buscar. Inténtalo de nuevo.', 'asistente');
+        }
+    });
+
+    // Handle item selection
+    document.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('item-option-btn')) {
+            selectedItem = event.target.dataset.item;
+            console.log('Item selected:', selectedItem, 'currentSearchType:', currentSearchType);
+            document.getElementById('search-input-container').style.display = 'none';
+            document.getElementById('item-options').style.display = 'none';
+
+            if (currentSearchType === 'book') {
+                agregarMensaje(`Asistente: Has seleccionado el libro "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
+                document.getElementById('item-options').innerHTML = `
+                    <button class="action-btn" id="breve-sinopsis">Breve sinopsis</button>
+                    <button class="action-btn" id="informacion">Información</button>
+                    <button class="action-btn" id="usar-recomendacion">Usar como recomendación</button>
+                    <button class="action-btn" id="inicio">Inicio</button>
+                `;
+                document.getElementById('item-options').style.display = 'block';
+            } else if (currentSearchType === 'author') {
+                agregarMensaje(`Asistente: Has seleccionado el autor "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
+                document.getElementById('item-options').innerHTML = `
+                    <button class="action-btn" id="informacion-autor">Información</button>
+                    <button class="action-btn" id="libros-disponibles">Libros disponibles</button>
+                    <button class="action-btn" id="inicio">Inicio</button>
+                `;
+                document.getElementById('item-options').style.display = 'block';
+                console.log('Author options displayed, selectedItem is:', selectedItem);
+            }
+        }
+    });
+
+    // Handle final actions
+    document.addEventListener('click', async (event) => {
+        if (event.target.id === 'breve-sinopsis') {
+            try {
+                const response = await fetch('/generate-synopsis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ book: selectedItem })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    agregarMensaje(`Asistente: ${data.synopsis}`, 'asistente');
+                } else {
+                    agregarMensaje('Asistente: Error al generar la sinopsis.', 'asistente');
+                }
+            } catch (error) {
+                agregarMensaje('Asistente: Error al conectar con el servidor.', 'asistente');
+            }
+            resetChatOptions();
+        } else if (event.target.id === 'informacion') {
+            try {
+                const response = await fetch('/generate-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ book: selectedItem })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    agregarMensaje(`Asistente: ${data.info}`, 'asistente');
+                } else {
+                    agregarMensaje('Asistente: Error al obtener información.', 'asistente');
+                }
+            } catch (error) {
+                agregarMensaje('Asistente: Error al conectar con el servidor.', 'asistente');
+            }
+            resetChatOptions();
+        } else if (event.target.id === 'usar-recomendacion') {
+            agregarMensaje('Asistente: Usar como recomendación - Esta funcionalidad estará disponible próximamente.', 'asistente');
+            resetChatOptions();
+        } else if (event.target.id === 'informacion-autor') {
+            try {
+                const response = await fetch('/generate-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ author: selectedItem })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    agregarMensaje(`Asistente: ${data.info}`, 'asistente');
+                } else {
+                    agregarMensaje('Asistente: Error al obtener información.', 'asistente');
+                }
+            } catch (error) {
+                agregarMensaje('Asistente: Error al conectar con el servidor.', 'asistente');
+            }
+            resetChatOptions();
+        } else if (event.target.id === 'libros-disponibles') {
+            console.log('Libros disponibles clicked, selectedItem:', selectedItem);
+            if (!selectedItem) {
+                console.error('selectedItem is undefined!');
+                agregarMensaje('Asistente: Error: No se ha seleccionado un autor.', 'asistente');
+                resetChatOptions();
+                return;
+            }
+            try {
+                const response = await fetch(`/get-books-by-author?author=${encodeURIComponent(selectedItem)}`);
+                const data = await response.json();
+                console.log('Response data:', data);
+                if (response.ok && data.books && data.books.length > 0) {
+                    const booksList = data.books.map(book => `- ${book}`).join('\n');
+                    agregarMensaje(`Asistente: Libros disponibles de ${selectedItem}:\n${booksList}`, 'asistente');
+                } else {
+                    agregarMensaje('Asistente: No se encontraron libros para este autor.', 'asistente');
+                }
+            } catch (error) {
+                console.error('Error fetching books:', error);
+                agregarMensaje('Asistente: Error al obtener libros.', 'asistente');
+            }
+            resetChatOptions();
+        }
+    });
+
+    function resetChatOptions() {
+        // Hide all dynamic elements
+        document.getElementById('sub-options').style.display = 'none';
+        document.getElementById('search-input-container').style.display = 'none';
+        document.getElementById('item-options').style.display = 'none';
+        document.getElementById('gemini-section').style.display = 'none';
+        document.getElementById('search-input').value = '';
+        document.getElementById('search-list').innerHTML = '';
+        currentSearchType = null;
+        selectedItem = null;
+
+        // Show main chat options (they're now inline in chat)
+        const chatOptions = document.getElementById('chat-options');
+        if (chatOptions) {
+            chatOptions.style.display = 'block';
+        }
+    }
+
+    // Handle final actions - now includes inicio button
+    document.addEventListener('click', async (event) => {
+        if (event.target.id === 'inicio') {
+            // Clear chat and show initial options
+            document.getElementById('chat-output').innerHTML = '<div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>';
+            resetChatOptions();
+            return;
+        }
+        // ... existing code for other actions
+    });
 });

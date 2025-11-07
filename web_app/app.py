@@ -38,6 +38,11 @@ def nosotros():
     return send_from_directory("pages", "nosotros.html")
 
 
+@app.route("/pages/contact.html")
+def contact():
+    return send_from_directory("pages", "contact.html")
+
+
 @app.route("/js/<path:filename>")
 def serve_js(filename):
     return send_from_directory("js", filename)
@@ -165,6 +170,127 @@ def receive_selected():
         # Return results with synopses
         web_to_alg.progress_callback(0, 0, "complete")
         return jsonify({"results": synopses})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/search-books", methods=["GET"])
+def search_books():
+    query = request.args.get("q", "").strip().lower()
+    if not query:
+        return jsonify({"error": "Query parameter 'q' is required"}), 400
+
+    try:
+        # Load the books CSV
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        df = pd.read_csv(csv_path, delimiter=";",
+            encoding="ISO-8859-1",
+            on_bad_lines="skip",
+            dtype={"Year-Of-Publication": str})
+
+        # Filter books by title (case-insensitive partial match)
+        matches = df[df["Book-Title"].str.lower().str.contains(query, na=False)]["Book-Title"].unique().tolist()
+        # Limit to top 10 matches for performance
+        matches = matches[:10]
+
+        return jsonify({"results": matches})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/search-authors", methods=["GET"])
+def search_authors():
+    query = request.args.get("q", "").strip().lower()
+    if not query:
+        return jsonify({"error": "Query parameter 'q' is required"}), 400
+
+    try:
+        # Load the books CSV
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        df = pd.read_csv(csv_path, delimiter=";",
+            encoding="ISO-8859-1",
+            on_bad_lines="skip",
+            dtype={"Year-Of-Publication": str})
+
+        # Filter authors by name (case-insensitive partial match)
+        matches = df[df["Book-Author"].str.lower().str.contains(query, na=False)]["Book-Author"].unique().tolist()
+        # Limit to top 10 matches for performance
+        matches = matches[:10]
+
+        return jsonify({"results": matches})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get-books-by-author", methods=["GET"])
+def get_books_by_author():
+    author = request.args.get("author", "").strip()
+    print(f"DEBUG: Received author parameter: '{author}'")
+    if not author:
+        return jsonify({"error": "Author parameter is required"}), 400
+
+    try:
+        # Load the books CSV
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        df = pd.read_csv(csv_path, delimiter=";",
+            encoding="ISO-8859-1",
+            on_bad_lines="skip",
+            dtype={"Year-Of-Publication": str})
+
+        # Filter books by exact author match
+        print(f"DEBUG: Filtering books for author: '{author}'")
+        books = df[df["Book-Author"] == author]["Book-Title"].unique().tolist()
+        print(f"DEBUG: Found {len(books)} books: {books[:5]}...")  # Show first 5
+
+        return jsonify({"books": books})
+    except Exception as e:
+        print(f"DEBUG: Error in get_books_by_author: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/generate-info", methods=["POST"])
+def generate_info():
+    data = request.get_json()
+    book = data.get("book")
+    author = data.get("author")
+
+    if not book and not author:
+        return jsonify({"error": "Either 'book' or 'author' parameter is required"}), 400
+
+    try:
+        if book:
+            prompt = f"Proporciona información breve y concisa en español sobre el libro '{book}'. Incluye autor, género y una descripción corta (máximo 3 oraciones)."
+        else:
+            prompt = f"Proporciona información breve y concisa en español sobre el autor '{author}'. Incluye biografía corta, obras principales y estilo literario (máximo 3 oraciones)."
+
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        response = model.generate_content(prompt)
+        info = response.text.strip()
+
+        return jsonify({"info": info})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/generate-synopsis", methods=["POST"])
+def generate_synopsis():
+    data = request.get_json()
+    book = data.get("book")
+
+    if not book:
+        return jsonify({"error": "'book' parameter is required"}), 400
+
+    try:
+        prompt = f"Genera una breve sinopsis en español (máximo 3 oraciones) para el libro '{book}'. Responde solo con la sinopsis, sin títulos ni formato adicional."
+
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        response = model.generate_content(prompt)
+        synopsis = response.text.strip()
+
+        return jsonify({"synopsis": synopsis})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
