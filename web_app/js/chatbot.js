@@ -53,44 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }   
 
     enviarBoton.addEventListener('click', async () => {
-        // Check if we're in search mode (search input container is visible)
-        const searchContainer = document.getElementById('search-input-container');
-        const isSearchMode = searchContainer && searchContainer.style.display === 'block';
-
-        if (isSearchMode) {
-            // If search input is visible, treat this as a search action using the search input
-            const searchInput = document.getElementById('search-input');
-            const query = searchInput ? searchInput.value.trim() : mensajeInput.value.trim();
-
-            if (!query) {
-                alert('Por favor, escribe algo para buscar.');
-                return;
-            }
-
-            try {
-                const endpoint = currentSearchType === 'book' ? '/search-books' : '/search-authors';
-                const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                if (response.ok && data.results && data.results.length > 0) {
-                    // Show results as buttons
-                    const resultsHtml = data.results.map(item =>
-                        `<button class="item-option-btn" data-item="${escapeHtml(item)}">${escapeHtml(item)}</button>`
-                    ).join('');
-                    document.getElementById('item-options').innerHTML = resultsHtml;
-                    document.getElementById('item-options').style.display = 'block';
-                    if (searchInput) searchInput.value = ''; // Clear search input
-                    mensajeInput.value = ''; // Clear message input
-                } else {
-                    agregarMensaje('Asistente: No se encontraron resultados para tu búsqueda.', 'asistente');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                agregarMensaje('Asistente: Error al buscar. Inténtalo de nuevo.', 'asistente');
-            }
-            return;
-        }
-
         // Normal Gemini chat
         const mensaje = mensajeInput.value;
         if (mensaje.trim() === '') {
@@ -485,12 +447,37 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok && data.results && data.results.length > 0) {
-                // Show results as buttons
-                const resultsHtml = data.results.map(item =>
-                    `<button class="item-option-btn" data-item="${escapeHtml(item)}">${escapeHtml(item)}</button>`
-                ).join('');
-                document.getElementById('item-options').innerHTML = resultsHtml;
-                document.getElementById('item-options').style.display = 'block';
+                // Check if query matches one of the results (case insensitive)
+                const matchedItem = data.results.find(item => item.toLowerCase() === query.toLowerCase());
+                if (matchedItem) {
+                    selectedItem = matchedItem;
+                    // Hide search
+                    document.getElementById('search-input-container').style.display = 'none';
+                    // Clear input and datalist
+                    document.getElementById('search-input').value = '';
+                    document.getElementById('search-list').innerHTML = '';
+                    // Show actions
+                    if (currentSearchType === 'book') {
+                        agregarMensaje(`Asistente: Has seleccionado el libro "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
+                        document.getElementById('item-options').innerHTML = `
+                            <button class="action-btn" id="breve-sinopsis">Breve sinopsis</button>
+                            <button class="action-btn" id="informacion">Información</button>
+                            <button class="action-btn" id="usar-recomendacion">Usar como recomendación</button>
+                            <button class="action-btn" id="inicio">Inicio</button>
+                        `;
+                        document.getElementById('item-options').style.display = 'block';
+                    } else if (currentSearchType === 'author') {
+                        agregarMensaje(`Asistente: Has seleccionado el autor "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
+                        document.getElementById('item-options').innerHTML = `
+                            <button class="action-btn" id="informacion-autor">Información</button>
+                            <button class="action-btn" id="libros-disponibles">Libros disponibles</button>
+                            <button class="action-btn" id="inicio">Inicio</button>
+                        `;
+                        document.getElementById('item-options').style.display = 'block';
+                    }
+                } else {
+                    agregarMensaje('Asistente: No se encontró una coincidencia exacta. Inténtalo de nuevo.', 'asistente');
+                }
             } else {
                 agregarMensaje('Asistente: No se encontraron resultados para tu búsqueda.', 'asistente');
             }
