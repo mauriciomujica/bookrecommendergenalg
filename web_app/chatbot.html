@@ -1,0 +1,56 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - Recomendador Musketeers</title>
+    <link rel="stylesheet" href="./css/estilos.css">
+    <link rel="icon" href="./assets/img/icon.ico">
+</head>
+<body>
+    <header class="navbar">
+        <div class="icono">
+            <a href="index.html"><img src="./assets/img/logo.png" alt="Logo Musketeers"></a>
+            <a href="index.html"><span>Musketeers</span></a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="./index.html">Inicio</a></li>
+                <li><a href="./pages/nosotros.html">Nosotros</a></li>
+                <li><a href="./pages/contact.html">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div id="chatbot-section" style="display: block; position: relative; min-height: calc(100vh - 200px); margin-top: 20px;">
+        <h2 style="text-align: center; margin: 20px;">Chatbot</h2>
+        <div id="chat-output">
+            <div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>
+        </div>
+        <div id="chat-options" class="chat-options-inline">
+            <button class="option-btn" id="estado-pedido">Estado del pedido</button>
+            <button class="option-btn" id="locales-cercanos">Locales más cercanos</button>
+            <button class="option-btn" id="soporte">Soporte</button>
+            <button class="option-btn" id="inventario">Inventario</button>
+            <button class="option-btn" id="toggle-gemini">Gemini</button>
+        </div>
+        <div id="sub-options" style="display: none; text-align: center; margin: 10px 0;">
+            <!-- Sub-options will be inserted here dynamically -->
+        </div>
+        <div id="search-input-container" style="display: none; text-align: center; margin: 10px 0;">
+            <input type="text" id="search-input" placeholder="Escribe aquí..." list="search-list">
+            <datalist id="search-list"></datalist>
+            <button id="search-btn">Buscar</button>
+        </div>
+        <div id="item-options" style="display: none; text-align: center; margin: 10px 0;">
+            <!-- Item-specific options will be inserted here -->
+        </div>
+        <div id="gemini-section" style="display: none; text-align: center; margin: 20px 0;">
+            <textarea id="mensaje" name="mensaje" placeholder="  Deja aquí tu mensaje o consulta"></textarea>
+            <div class="error" id="errorMensaje"></div>
+            <button id="enviarMensaje">Enviar</button>
+        </div>
+    </div>
+
+    <script src="/js/chatbot.js"></script>
+</body>
+</html>

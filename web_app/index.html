@@ -1,93 +1,163 @@
-<html>
+<!DOCTYPE html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recomendador Musketeers</title>
-    <link rel="stylesheet" href="./css/estilos.css">
-    <link rel="icon" href="./assets/img/icon.ico">
-
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D'Artagnan | Musketeers</title>
+  <link rel="stylesheet" href="./css/estilos.css" />
+  <link rel="icon" href="./assets/img/icon.ico" />
 </head>
+
 <body>
-    <div class = "banner" id="home">
-        <div class = "navbar">
-            <div class = "icono">
-                <a href="index.html"><img src="./assets/img/logo.png" alt="Logo Empresa"></a>
-                <a href="index.html"><span title="Recomendador amigo">Musketeers</span></a>
-            </div>
-            <ul>
-                <li><a href="./index.html">Inicio</a></li>
-                <li><a href="./pages/nosotros.html">Nosotros</a></li>
-                <li><a href="./pages/contact.html">Contacto</a></li>
-            </ul>
+  <header class="navbar">
+    <div class="icono">
+      <a href="#"><img src="./assets/img/logo.png" alt="Logo Musketeers"></a>
+      <a href="#"><span>Musketeers</span></a>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#problema">Problema</a></li>
+        <li><a href="#solucion">Solución</a></li>
+        <li><a href="#tecnologia">Tecnología</a></li>
+        <li><a href="#herramientas">Herramientas</a></li>
+        <li><a href="#nosotros">Nosotros</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Descubrí tu próxima lectura favorita</h1>
+    <p>D'Artagnan te guía a través del universo de los libros, combinando inteligencia artificial y pasión por la lectura.</p>
+    <a href="#problema" class="btn-accent">Conocé más</a>
+  </section>
+
+  <section id="problema" class="section-flip flip-container">
+    <div class="flip-inner section-flip-inner">
+      <div class="flip-front">
+        <h2>El problema</h2>
+        <p>Haz scroll para descubrir más...</p>
+      </div>
+      <div class="flip-back">
+        <p>Los lectores enfrentan una sobreoferta de títulos sin orientación personalizada.
+        A diferencia de las librerías tradicionales, donde un librero recomienda según gustos o estados de ánimo,
+        las plataformas digitales ofrecen experiencias impersonales y poco satisfactorias.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="solucion" class="section-flip flip-container">
+    <div class="flip-inner section-flip-inner">
+      <div class="flip-front">
+        <h2>La solución</h2>
+        <p>Descubrí cómo lo resolvemos...</p>
+      </div>
+      <div class="flip-back">
+        <p><strong>D'Artagnan</strong> es un recomendador de lecturas basado en inteligencia artificial.
+        Sugerimos libros según tus intereses y hábitos de lectura, recreando la experiencia de un librero experimentado en el entorno digital.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="tecnologia" class="section-fade">
+    <h2>Tecnología y arquitectura</h2>
+    <p>D'Artagnan combina innovación tecnológica con compromiso social, garantizando privacidad y promoviendo la diversidad cultural.</p>
+    <div class="tech-grid">
+      <div class="tech-item">🐍 Python</div>
+      <div class="tech-item">💬 IA Conversacional</div>
+      <div class="tech-item">🧠 Algoritmos Genéticos</div>
+      <div class="tech-item">🗃️ PostgreSQL / MongoDB</div>
+      <div class="tech-item">⚙️ Django (Backend)</div>
+      <div class="tech-item">💻 React / HTML / CSS</div>
+    </div>
+  </section>
+
+  <section id="herramientas" class="section-slide explora">
+    <h2>Explorá nuestras herramientas</h2>
+    <div class="tools">
+      <div class="tool">
+        <h3>Dataset</h3>
+        <p>Descubrí cómo D'Artagnan aprende del comportamiento lector y analiza datos reales.</p>
+        <a href="dataset.html" class="btn-accent">Explorar Dataset</a>
+      </div>
+      <div class="tool">
+        <h3>Chatbot</h3>
+        <p>Interactuá con D'Artagnan y recibí recomendaciones personalizadas en tiempo real.</p>
+        <a href="chatbot.html" class="btn-accent">Probar Chatbot</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="nosotros" class="section-zoom us-container">
+    <h2>Nosotros</h2>
+    <p>Somos <strong>Musketeers</strong>, un equipo de Ciencia de Datos apasionado por la tecnología y la lectura.</p>
+    <p>Desarrollamos D'Artagnan para acercar a las personas a nuevas experiencias lectoras, combinando innovación y compromiso social.</p>
+
+    <div class="flipboxes">
+      <div class="flip-box flip-container">
+        <div class="flip-inner flip-box-inner">
+          <div class="flip-front"><h1>MISIÓN</h1></div>
+          <div class="flip-back">
+            <p>Diseñar soluciones inteligentes que acompañen a los lectores y promuevan el hábito lector y el acceso a la cultura escrita.</p>
+          </div>
         </div>
-    </div>
-    <div id="welcome-section" style="text-align: center; margin: 50px;">
-        <h1>Bienvenido/a, ingrese su numero de usuario</h1>
-        <form id="welcome-form">
-            <input type="text" id="user-id" placeholder="Número de usuario" required>
-            <button type="submit">Continuar</button>
-        </form>
-    </div>
-    <div id="main-buttons" style="text-align: center; margin: 20px; display: none;">
-        <button class="main-nav-btn" id="dataset-button">Dataset</button>
-        <button class="main-nav-btn" id="chatbot-button">Chatbot</button>
+      </div>
+
+      <div class="flip-box flip-container">
+        <div class="flip-inner flip-box-inner">
+          <div class="flip-front"><h1>VISIÓN</h1></div>
+          <div class="flip-back">
+            <p>Ser referentes en el uso de IA para potenciar la conexión entre personas y las historias que las inspiran.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="dataset-section" style="display: none; position: relative; min-height: calc(100vh - 200px);">
-        <!-- Placeholder for Dataset content -->
-        <div style="text-align: center; margin: 20px;">
-            <button class="main-nav-btn" id="back-button">Volver al inicio</button>
-        </div>
-        <div id="dataset-results" style="margin-top: 20px; text-align: center;">
-            <!-- Results will be displayed here -->
-        </div>
-        <div id="loading-container" class="loading-container" style="display: none;">
-            <div class="loading-spinner"></div>
-            <p>Cargando libros...</p>
-        </div>
-        <div id="dataset-selection" style="margin-top: 10px; text-align: center;"></div>
-        <div id="progress-container" style="display: none; margin: 20px auto; max-width: 400px;">
-            <div id="progress-bar" style="width: 100%; background-color: #f0f0f0; border-radius: 10px; overflow: hidden;">
-                <div id="progress-fill" style="width: 0%; height: 20px; background-color: #2d6cdf; transition: width 0.3s ease;"></div>
-            </div>
-            <p id="progress-text" style="text-align: center; margin-top: 10px;">Procesando...</p>
-        </div>
+    <h2>Objetivos</h2>
+    <div class="card">
+      <ul>
+        <li>Desarrollar un sistema de recomendación de lecturas personalizadas.</li>
+        <li>Promover la diversidad literaria y visibilidad de autores emergentes.</li>
+        <li>Garantizar el uso responsable de los datos.</li>
+        <li>Combinar innovación técnica y compromiso cultural.</li>
+      </ul>
     </div>
+  </section>
 
-    <div id="chatbot-section" style="display: none; position: relative; min-height: calc(100vh - 200px);">
-        <div id="chat-output">
-        <div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>
-        </div>
-        <div id="chat-options" class="chat-options-inline">
-            <button class="option-btn" id="estado-pedido">Estado del pedido</button>
-            <button class="option-btn" id="locales-cercanos">Locales más cercanos</button>
-            <button class="option-btn" id="soporte">Soporte</button>
-            <button class="option-btn" id="inventario">Inventario</button>
-            <button class="option-btn" id="toggle-gemini">Gemini</button>
-        </div>
-        <div id="sub-options" style="display: none; text-align: center; margin: 10px 0;">
-            <!-- Sub-options will be inserted here dynamically -->
-        </div>
-        <div id="search-input-container" style="display: none; text-align: center; margin: 10px 0;">
-            <input type="text" id="search-input" placeholder="Escribe aquí..." list="search-list">
-            <datalist id="search-list"></datalist>
-            <button id="search-btn">Buscar</button>
-        </div>
-        <div id="item-options" style="display: none; text-align: center; margin: 10px 0;">
-            <!-- Item-specific options will be inserted here -->
-        </div>
-        <div id="gemini-section" style="display: none; text-align: center; margin: 20px 0;">
-            <textarea id="mensaje" name="mensaje" placeholder="  Deja aquí tu mensaje o consulta"></textarea>
-            <div class="error" id="errorMensaje"></div>
-            <button id="enviarMensaje">Enviar</button>
-        </div>
-        </div>
-
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2025 Musketeers. Todos los derechos reservados.</p>
+      <div class="socials">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fas fa-envelope"></i></a>
+      </div>
     </div>
-        
-    </div>
+  </footer>
 
-    <script src="/js/chatbot.js"></script>
+  <script>
+const selectors = ['.section-card', '.section-flip', '.section-fade', '.section-slide', '.section-zoom'];
+selectors.forEach(sel => {
+  document.querySelectorAll(sel).forEach(el => {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          setTimeout(() => {
+            el.classList.add('visible');
+            // Deja de observar para que el elemento permanezca visible
+            obs.unobserve(el);
+          }, 800);
+        }
+      });
+    }, { threshold: 0.6 });
+    obs.observe(el);
+  });
+});
+
+// Script del Parallax (necesario si quieres el efecto de movimiento)
+window.addEventListener('scroll', () => {
+  const scrollVal = window.scrollY;
+  document.body.style.setProperty('--scroll', scrollVal);
+});
+</script>
 </body>
 </html>

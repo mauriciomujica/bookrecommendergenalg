@@ -43,6 +43,16 @@ def contact():
     return send_from_directory("pages", "contact.html")
 
 
+@app.route("/dataset.html")
+def dataset():
+    return send_from_directory(".", "dataset.html")
+
+
+@app.route("/chatbot.html")
+def chatbot():
+    return send_from_directory(".", "chatbot.html")
+
+
 @app.route("/js/<path:filename>")
 def serve_js(filename):
     return send_from_directory("js", filename)
