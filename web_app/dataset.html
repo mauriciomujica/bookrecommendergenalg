@@ -21,18 +21,21 @@
         </nav>
     </header>
 
-    <div id="welcome-section" style="text-align: center; margin: 50px;">
-        <h1>Bienvenido/a, ingrese su numero de usuario</h1>
-        <form id="welcome-form">
-            <input type="text" id="user-id" placeholder="Número de usuario" required>
-            <button type="submit">Continuar</button>
+    <div id="welcome-section" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+        <form class="login-form" id="welcome-form" action="javascript:void(0);">
+            <h1>Login</h1>
+            <div class="form-input-material">
+                <input type="text" id="user-id" placeholder=" " autocomplete="off" class="form-control-material" required />
+                <label for="user-id">Número de usuario</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-ghost">Continuar</button>
         </form>
     </div>
 
     <div id="dataset-section" style="display: none; position: relative; min-height: calc(100vh - 200px); margin-top: 20px;">
-        <h2 style="text-align: center; margin: 20px;">Dataset</h2>
-        <div style="text-align: center; margin: 20px;">
-            <button class="main-nav-btn" onclick="window.location.href='index.html'">Volver al inicio</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px;">
+            <h2>Dataset</h2>
+            <button class="btn-accent" onclick="document.getElementById('welcome-section').style.display='flex'; document.getElementById('dataset-section').style.display='none';">Volver al formulario</button>
         </div>
         <div id="dataset-results" style="margin-top: 20px; text-align: center;">
             <!-- Results will be displayed here -->
