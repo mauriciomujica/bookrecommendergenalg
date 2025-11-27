@@ -328,21 +328,25 @@ function attachOptionListeners() {
 
     // Chat options handlers
     document.getElementById('estado-pedido').addEventListener('click', () => {
-        agregarMensaje('Asistente: Estado del pedido - Esta funcionalidad estará disponible próximamente.', 'asistente');
+        agregarMensaje('Estado del pedido', 'usuario');
+        agregarMensaje('Asistente: Esta funcionalidad estará disponible próximamente.', 'asistente');
         resetChatOptions();
     });
 
     document.getElementById('locales-cercanos').addEventListener('click', () => {
-        agregarMensaje('Asistente: Locales más cercanos - Esta funcionalidad estará disponible próximamente.', 'asistente');
+        agregarMensaje('Locales más cercanos', 'usuario');
+        agregarMensaje('Asistente: Esta funcionalidad estará disponible próximamente.', 'asistente');
         resetChatOptions();
     });
 
     document.getElementById('soporte').addEventListener('click', () => {
-        agregarMensaje('Asistente: Soporte - Esta funcionalidad estará disponible próximamente.', 'asistente');
+        agregarMensaje('Soporte', 'usuario');
+        agregarMensaje('Asistente: Esta funcionalidad estará disponible próximamente.', 'asistente');
         resetChatOptions();
     });
 
     document.getElementById('toggle-gemini').addEventListener('click', () => {
+        agregarMensaje('Gemini', 'usuario');
         const geminiSection = document.getElementById('gemini-section');
         if (geminiSection.style.display === 'none' || geminiSection.style.display === '') {
             geminiSection.style.display = 'block';
@@ -352,6 +356,7 @@ function attachOptionListeners() {
     });
 
     document.getElementById('inventario').addEventListener('click', () => {
+        agregarMensaje('Inventario', 'usuario');
         agregarMensaje('Asistente: Muy bien! ¿En qué estás interesado?', 'asistente');
         // Hide the main chat options and show sub-options
         document.getElementById('chat-options').style.display = 'none';
@@ -364,8 +369,9 @@ function attachOptionListeners() {
         // Attach listeners to the newly created buttons
         document.getElementById('buscar-libro').addEventListener('click', () => {
             console.log('Buscar libro clicked');
+            agregarMensaje('Buscar por libro', 'usuario');
             currentSearchType = 'book';
-            agregarMensaje('Asistente: Buscar por libro - Escribe el nombre del libro:', 'asistente');
+            agregarMensaje('Asistente: Escribe el nombre del libro:', 'asistente');
             document.getElementById('sub-options').style.display = 'none';
             document.getElementById('search-input-container').style.display = 'block';
             document.getElementById('search-input').placeholder = 'Escribe el nombre del libro...';
@@ -374,8 +380,9 @@ function attachOptionListeners() {
 
         document.getElementById('buscar-autor').addEventListener('click', () => {
             console.log('Buscar autor clicked');
+            agregarMensaje('Buscar por autor', 'usuario');
             currentSearchType = 'author';
-            agregarMensaje('Asistente: Buscar por autor - Escribe el nombre del autor:', 'asistente');
+            agregarMensaje('Asistente: Escribe el nombre del autor:', 'asistente');
             document.getElementById('sub-options').style.display = 'none';
             document.getElementById('search-input-container').style.display = 'block';
             document.getElementById('search-input').placeholder = 'Escribe el nombre del autor...';
@@ -384,12 +391,24 @@ function attachOptionListeners() {
     });
 }
 
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // Search functionality with autocomplete
 const searchInput = document.getElementById('search-input');
-const searchBtn = document.getElementById('search-btn');
 
 if (searchInput) {
-    searchInput.addEventListener('input', async () => {
+    const debouncedSearch = debounce(async () => {
         const query = searchInput.value.trim();
         if (query.length < 2) {
             document.getElementById('search-list').innerHTML = '';
@@ -409,60 +428,64 @@ if (searchInput) {
         } catch (error) {
             console.error('Error:', error);
         }
-    });
-}
+    }, 300); // 300ms delay
 
-if (searchBtn) {
-    searchBtn.addEventListener('click', async () => {
-        const query = searchInput.value.trim();
-        if (!query) {
-            alert('Por favor, escribe algo para buscar.');
-            return;
-        }
+    searchInput.addEventListener('input', debouncedSearch);
 
-        try {
-            const endpoint = currentSearchType === 'book' ? '/search-books' : '/search-authors';
-            const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
-            const data = await response.json();
+    searchInput.addEventListener('keydown', async (event) => {
+        if (event.key === 'Enter') {
+            const query = searchInput.value.trim();
+            if (!query) {
+                alert('Por favor, escribe algo para buscar.');
+                return;
+            }
 
-            if (response.ok && data.results && data.results.length > 0) {
-                // Check if query matches one of the results (case insensitive)
-                const matchedItem = data.results.find(item => item.toLowerCase() === query.toLowerCase());
-                if (matchedItem) {
-                    selectedItem = matchedItem;
-                    // Hide search
-                    document.getElementById('search-input-container').style.display = 'none';
-                    // Clear input and datalist
-                    document.getElementById('search-input').value = '';
-                    document.getElementById('search-list').innerHTML = '';
-                    // Show actions
-                    if (currentSearchType === 'book') {
-                        agregarMensaje(`Asistente: Has seleccionado el libro "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
-                        document.getElementById('item-options').innerHTML = `
-                            <button class="action-btn" id="breve-sinopsis">Breve sinopsis</button>
-                            <button class="action-btn" id="informacion">Información</button>
-                            <button class="action-btn" id="usar-recomendacion">Usar como recomendación</button>
-                            <button class="action-btn" id="inicio">Inicio</button>
-                        `;
-                        document.getElementById('item-options').style.display = 'block';
-                    } else if (currentSearchType === 'author') {
-                        agregarMensaje(`Asistente: Has seleccionado el autor "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
-                        document.getElementById('item-options').innerHTML = `
-                            <button class="action-btn" id="informacion-autor">Información</button>
-                            <button class="action-btn" id="libros-disponibles">Libros disponibles</button>
-                            <button class="action-btn" id="inicio">Inicio</button>
-                        `;
-                        document.getElementById('item-options').style.display = 'block';
+            try {
+                const endpoint = currentSearchType === 'book' ? '/search-books' : '/search-authors';
+                const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (response.ok && data.results && data.results.length > 0) {
+                    // Check if query matches one of the results (case insensitive)
+                    const matchedItem = data.results.find(item => item.toLowerCase() === query.toLowerCase());
+                    if (matchedItem) {
+                        selectedItem = matchedItem;
+                        // Hide search
+                        document.getElementById('search-input-container').style.display = 'none';
+                        // Clear input and datalist
+                        document.getElementById('search-input').value = '';
+                        document.getElementById('search-list').innerHTML = '';
+                        // Show actions
+                        if (currentSearchType === 'book') {
+                            agregarMensaje(selectedItem, 'usuario');
+                            agregarMensaje(`Asistente: Has seleccionado el libro "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
+                            document.getElementById('item-options').innerHTML = `
+                                <button class="action-btn" id="breve-sinopsis">Breve sinopsis</button>
+                                <button class="action-btn" id="informacion">Información</button>
+                                <button class="action-btn" id="usar-recomendacion">Usar como recomendación</button>
+                                <button class="action-btn" id="inicio">Inicio</button>
+                            `;
+                            document.getElementById('item-options').style.display = 'block';
+                        } else if (currentSearchType === 'author') {
+                            agregarMensaje(selectedItem, 'usuario');
+                            agregarMensaje(`Asistente: Has seleccionado el autor "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
+                            document.getElementById('item-options').innerHTML = `
+                                <button class="action-btn" id="informacion-autor">Información</button>
+                                <button class="action-btn" id="libros-disponibles">Libros disponibles</button>
+                                <button class="action-btn" id="inicio">Inicio</button>
+                            `;
+                            document.getElementById('item-options').style.display = 'block';
+                        }
+                    } else {
+                        agregarMensaje('Asistente: No se encontró una coincidencia exacta. Inténtalo de nuevo.', 'asistente');
                     }
                 } else {
-                    agregarMensaje('Asistente: No se encontró una coincidencia exacta. Inténtalo de nuevo.', 'asistente');
+                    agregarMensaje('Asistente: No se encontraron resultados para tu búsqueda.', 'asistente');
                 }
-            } else {
-                agregarMensaje('Asistente: No se encontraron resultados para tu búsqueda.', 'asistente');
+            } catch (error) {
+                console.error('Error:', error);
+                agregarMensaje('Asistente: Error al buscar. Inténtalo de nuevo.', 'asistente');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            agregarMensaje('Asistente: Error al buscar. Inténtalo de nuevo.', 'asistente');
         }
     });
 }
@@ -500,6 +523,7 @@ document.addEventListener('click', async (event) => {
 // Handle final actions
 document.addEventListener('click', async (event) => {
     if (event.target.id === 'breve-sinopsis') {
+        agregarMensaje('Breve sinopsis', 'usuario');
         try {
             const response = await fetch('/generate-synopsis', {
                 method: 'POST',
@@ -517,6 +541,7 @@ document.addEventListener('click', async (event) => {
         }
         resetChatOptions();
     } else if (event.target.id === 'informacion') {
+        agregarMensaje('Información', 'usuario');
         try {
             const response = await fetch('/generate-info', {
                 method: 'POST',
@@ -534,9 +559,11 @@ document.addEventListener('click', async (event) => {
         }
         resetChatOptions();
     } else if (event.target.id === 'usar-recomendacion') {
-        agregarMensaje('Asistente: Usar como recomendación - Esta funcionalidad estará disponible próximamente.', 'asistente');
+        agregarMensaje('Usar como recomendación', 'usuario');
+        agregarMensaje('Asistente: Esta funcionalidad estará disponible próximamente.', 'asistente');
         resetChatOptions();
     } else if (event.target.id === 'informacion-autor') {
+        agregarMensaje('Información', 'usuario');
         try {
             const response = await fetch('/generate-info', {
                 method: 'POST',
@@ -554,6 +581,7 @@ document.addEventListener('click', async (event) => {
         }
         resetChatOptions();
     } else if (event.target.id === 'libros-disponibles') {
+        agregarMensaje('Libros disponibles', 'usuario');
         console.log('Libros disponibles clicked, selectedItem:', selectedItem);
         if (!selectedItem) {
             console.error('selectedItem is undefined!');
@@ -600,6 +628,7 @@ function resetChatOptions() {
 // Handle final actions - now includes inicio button
 document.addEventListener('click', async (event) => {
     if (event.target.id === 'inicio') {
+        agregarMensaje('Inicio', 'usuario');
         // Clear chat and show initial options
         document.getElementById('chat-output').innerHTML = '<div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>';
         resetChatOptions();
