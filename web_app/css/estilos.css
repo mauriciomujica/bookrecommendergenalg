@@ -469,7 +469,27 @@ section p {
 }
 
 .asistente li {
-  margin-bottom: 4px;
+    margin-bottom: 4px;
+}
+
+.asistente .clickable-book {
+    cursor: pointer;
+    padding: 2px 0;
+    transition: background-color 0.3s;
+}
+
+.asistente .clickable-book:hover {
+    background-color: rgba(126, 34, 206, 0.1);
+}
+
+.asistente .clickable-search-result {
+    cursor: pointer;
+    padding: 2px 0;
+    transition: background-color 0.3s;
+}
+
+.asistente .clickable-search-result:hover {
+    background-color: rgba(126, 34, 206, 0.1);
 }
 
 .asistente strong, .asistente b {

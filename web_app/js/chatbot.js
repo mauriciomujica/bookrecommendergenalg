@@ -477,7 +477,43 @@ if (searchInput) {
                             document.getElementById('item-options').style.display = 'block';
                         }
                     } else {
-                        agregarMensaje('Asistente: No se encontró una coincidencia exacta. Inténtalo de nuevo.', 'asistente');
+                        // No exact match, but show suggestions
+                        const suggestionsList = '<ul class="search-results-list">' + data.results.map(item => `<li class="clickable-search-result" data-item="${escapeHtml(item)}">${escapeHtml(item)}</li>`).join('') + '</ul>';
+                        agregarMensaje(`Asistente: No encontré una coincidencia exacta para "${query}". Aquí tienes algunas sugerencias:${suggestionsList}`, 'asistente', true);
+
+                        // Attach click listeners to suggestions
+                        setTimeout(() => {
+                            document.querySelectorAll('.clickable-search-result').forEach(li => {
+                                li.addEventListener('click', () => {
+                                    const item = li.dataset.item;
+                                    selectedItem = item;
+                                    agregarMensaje(item, 'usuario');
+                                    if (currentSearchType === 'book') {
+                                        agregarMensaje(`Asistente: Has seleccionado el libro "${item}". ¿Qué deseas hacer?`, 'asistente');
+                                        document.getElementById('item-options').innerHTML = `
+                                            <button class="action-btn" id="breve-sinopsis">Breve sinopsis</button>
+                                            <button class="action-btn" id="informacion">Información</button>
+                                            <button class="action-btn" id="usar-recomendacion">Usar como recomendación</button>
+                                            <button class="action-btn" id="inicio">Inicio</button>
+                                        `;
+                                    } else if (currentSearchType === 'author') {
+                                        agregarMensaje(`Asistente: Has seleccionado el autor "${item}". ¿Qué deseas hacer?`, 'asistente');
+                                        document.getElementById('item-options').innerHTML = `
+                                            <button class="action-btn" id="informacion-autor">Información</button>
+                                            <button class="action-btn" id="libros-disponibles">Libros disponibles</button>
+                                            <button class="action-btn" id="inicio">Inicio</button>
+                                        `;
+                                    }
+                                    document.getElementById('item-options').style.display = 'block';
+                                    document.getElementById('chat-options').style.display = 'none';
+                                });
+                            });
+                        }, 0);
+
+                        // Hide search input after showing suggestions
+                        document.getElementById('search-input-container').style.display = 'none';
+                        document.getElementById('search-input').value = '';
+                        document.getElementById('search-list').innerHTML = '';
                     }
                 } else {
                     agregarMensaje('Asistente: No se encontraron resultados para tu búsqueda.', 'asistente');
@@ -541,7 +577,39 @@ document.addEventListener('click', async (event) => {
         }
         resetChatOptions();
     } else if (event.target.id === 'informacion') {
-        agregarMensaje('Información', 'usuario');
+        // For books, show sub-options for information source
+        document.getElementById('item-options').style.display = 'none';
+        document.getElementById('sub-options').innerHTML = `
+            <button class="sub-option-btn" id="info-database">Base de datos</button>
+            <button class="sub-option-btn" id="info-gemini">Gemini</button>
+        `;
+        document.getElementById('sub-options').style.display = 'block';
+    } else if (event.target.id === 'info-database') {
+        agregarMensaje('Base de datos', 'usuario');
+        try {
+            const response = await fetch(`/get-book-info-csv?book=${encodeURIComponent(selectedItem)}`);
+            const data = await response.json();
+            if (response.ok) {
+                const infoHtml = `
+                    <div style="text-align: center; margin: 10px 0;">
+                        <img src="${data.image_url}" alt="Portada del libro" style="max-width: 200px; height: auto; border: 1px solid #ddd; margin-bottom: 10px;">
+                        <p><strong>Título:</strong> ${escapeHtml(data.title)}</p>
+                        <p><strong>Autor:</strong> ${escapeHtml(data.author)}</p>
+                        <p><strong>Año:</strong> ${escapeHtml(data.year)}</p>
+                        <p><strong>Editorial:</strong> ${escapeHtml(data.publisher)}</p>
+                        <p><strong>ISBN:</strong> ${escapeHtml(data.isbn)}</p>
+                    </div>
+                `;
+                agregarMensaje(`Asistente: Información del libro desde la base de datos:${infoHtml}`, 'asistente', true);
+            } else {
+                agregarMensaje('Asistente: Error al obtener información de la base de datos.', 'asistente');
+            }
+        } catch (error) {
+            agregarMensaje('Asistente: Error al conectar con el servidor.', 'asistente');
+        }
+        resetChatOptions();
+    } else if (event.target.id === 'info-gemini') {
+        agregarMensaje('Gemini', 'usuario');
         try {
             const response = await fetch('/generate-info', {
                 method: 'POST',
@@ -594,8 +662,29 @@ document.addEventListener('click', async (event) => {
             const data = await response.json();
             console.log('Response data:', data);
             if (response.ok && data.books && data.books.length > 0) {
-                const booksList = data.books.map(book => `- ${book}`).join('\n');
-                agregarMensaje(`Asistente: Libros disponibles de ${selectedItem}:\n${booksList}`, 'asistente');
+                const booksList = '<ul class="books-list">' + data.books.map(book => `<li class="clickable-book" data-book="${escapeHtml(book)}">${escapeHtml(book)}</li>`).join('') + '</ul>';
+                agregarMensaje(`Asistente: Libros disponibles de ${selectedItem} (${data.books.length}):${booksList}`, 'asistente', true);
+
+                // Attach click listeners to clickable books after the message is added
+                setTimeout(() => {
+                    document.querySelectorAll('.clickable-book').forEach(li => {
+                        li.addEventListener('click', () => {
+                            const book = li.dataset.book;
+                            selectedItem = book;
+                            agregarMensaje(book, 'usuario');
+                            agregarMensaje(`Asistente: Has seleccionado el libro "${book}". ¿Qué deseas hacer?`, 'asistente');
+                            document.getElementById('item-options').innerHTML = `
+                                <button class="action-btn" id="breve-sinopsis">Breve sinopsis</button>
+                                <button class="action-btn" id="informacion">Información</button>
+                                <button class="action-btn" id="usar-recomendacion">Usar como recomendación</button>
+                                <button class="action-btn" id="inicio">Inicio</button>
+                            `;
+                            document.getElementById('item-options').style.display = 'block';
+                            // Hide main options if visible
+                            document.getElementById('chat-options').style.display = 'none';
+                        });
+                    });
+                }, 0);
             } else {
                 agregarMensaje('Asistente: No se encontraron libros para este autor.', 'asistente');
             }

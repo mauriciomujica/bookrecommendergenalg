@@ -184,6 +184,18 @@ def receive_selected():
         return jsonify({"error": str(e)}), 500
 
 
+def get_relevance(title, query):
+    title_l = title.lower()
+    query_l = query.lower()
+    if title_l == query_l:
+        return 3
+    elif title_l.startswith(query_l):
+        return 2
+    elif query_l in title_l:
+        return 1
+    else:
+        return 0
+
 @app.route("/search-books", methods=["GET"])
 def search_books():
     query = request.args.get("q", "").strip().lower()
@@ -201,8 +213,10 @@ def search_books():
 
         # Filter books by title (case-insensitive partial match)
         matches = df[df["Book-Title"].str.lower().str.contains(query, na=False)]["Book-Title"].unique().tolist()
-        # Limit to top 10 matches for performance
-        matches = matches[:10]
+        # Sort by relevance: exact match > starts with > contains
+        matches = sorted(matches, key=lambda x: (-get_relevance(x, query), x))
+        # Limit to top 20 matches
+        matches = matches[:20]
 
         return jsonify({"results": matches})
     except Exception as e:
@@ -253,6 +267,7 @@ def get_books_by_author():
         # Filter books by exact author match
         print(f"DEBUG: Filtering books for author: '{author}'")
         books = df[df["Book-Author"] == author]["Book-Title"].unique().tolist()
+        books.sort()  # Sort books alphabetically
         print(f"DEBUG: Found {len(books)} books: {books[:5]}...")  # Show first 5
 
         return jsonify({"books": books})
@@ -301,6 +316,43 @@ def generate_synopsis():
         synopsis = response.text.strip()
 
         return jsonify({"synopsis": synopsis})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get-book-info-csv", methods=["GET"])
+def get_book_info_csv():
+    book_title = request.args.get("book", "").strip()
+    if not book_title:
+        return jsonify({"error": "Book title parameter is required"}), 400
+
+    try:
+        # Load the books CSV
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        df = pd.read_csv(csv_path, delimiter=";",
+            encoding="ISO-8859-1",
+            on_bad_lines="skip",
+            dtype={"Year-Of-Publication": str})
+
+        # Find the book (case-insensitive exact match)
+        book_row = df[df["Book-Title"].str.lower() == book_title.lower()]
+        if book_row.empty:
+            return jsonify({"error": "Book not found in database"}), 404
+
+        # Take the first match
+        book_data = book_row.iloc[0]
+
+        info = {
+            "isbn": book_data["ISBN"],
+            "title": book_data["Book-Title"],
+            "author": book_data["Book-Author"],
+            "year": book_data["Year-Of-Publication"],
+            "publisher": book_data["Publisher"],
+            "image_url": book_data["Image-URL-L"]
+        }
+
+        return jsonify(info)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
