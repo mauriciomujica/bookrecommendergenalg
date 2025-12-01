@@ -87,11 +87,12 @@ body::before {
   transition: all 0.3s ease;
   display: inline-block;
   text-decoration: none;
+  box-shadow: none;
+  outline: none;
 }
 .btn-accent:hover {
   background: var(--primary);
   transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
 }
 
 /* ---------------- SECCIONES (AJUSTADO) ---------------- */

@@ -39,6 +39,11 @@ if (welcomeForm) {
             return;
         }
         currentUserId = userId;
+        // Set chatbot link
+        const chatbotLink = document.getElementById('chatbot-link');
+        if (chatbotLink) {
+            chatbotLink.href = `chatbot.html?user_id=${currentUserId}`;
+        }
         welcomeSection.style.display = 'none';
         if (mainButtons) {
             mainButtons.style.display = 'block';
@@ -628,7 +633,27 @@ document.addEventListener('click', async (event) => {
         resetChatOptions();
     } else if (event.target.id === 'usar-recomendacion') {
         agregarMensaje('Usar como recomendación', 'usuario');
-        agregarMensaje('Asistente: Esta funcionalidad estará disponible próximamente.', 'asistente');
+        if (!currentUserId) {
+            agregarMensaje('Asistente: Debes iniciar sesión para usar esta funcionalidad.', 'asistente');
+        } else {
+            // Send to server to add recommendation
+            fetch('/add-recommendation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: currentUserId, book: selectedItem })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    agregarMensaje('Asistente: Libro agregado a tus recomendaciones.', 'asistente');
+                } else {
+                    agregarMensaje('Asistente: Error al agregar recomendación.', 'asistente');
+                }
+            })
+            .catch(() => {
+                agregarMensaje('Asistente: Error al conectar con el servidor.', 'asistente');
+            });
+        }
         resetChatOptions();
     } else if (event.target.id === 'informacion-autor') {
         agregarMensaje('Información', 'usuario');

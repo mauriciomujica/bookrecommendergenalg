@@ -22,7 +22,7 @@
     </header>
 
     <div id="chatbot-section" style="display: block; position: relative; min-height: calc(100vh - 200px); margin-top: 20px;">
-        <h2 style="text-align: center; margin: 20px;">Chatbot</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px;"><h2>Chatbot</h2><button class="btn-accent" onclick="const params = new URLSearchParams(window.location.search); const uid = params.get('user_id'); window.location.href='dataset.html?user_id=' + uid;">Volver al Dataset</button></div>
         <div id="chat-output">
             <div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>
         </div>
@@ -55,6 +55,13 @@
         </div>
     </div>
 
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+        if (userId) {
+            currentUserId = userId;
+        }
+    </script>
     <script src="/js/chatbot.js"></script>
 </body>
 </html>

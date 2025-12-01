@@ -37,6 +37,10 @@
             <h2>Dataset</h2>
             <button class="btn-accent" onclick="document.getElementById('welcome-section').style.display='flex'; document.getElementById('dataset-section').style.display='none';">Volver al formulario</button>
         </div>
+        <div id="nav-buttons" style="display: flex; justify-content: center; gap: 20px; margin: 10px 0;">
+            <button class="btn-accent" style="background-color: #ccc; cursor: default; width: 140px; height: 40px; padding: 8px; font-size: 16px;" disabled>Dataset</button>
+            <a id="chatbot-link" href="#" class="btn-accent" style="width: 140px; display: inline-block; text-align: center; height: 40px; padding: 8px; line-height: 24px; font-size: 16px;">Chatbot</a>
+        </div>
         <div id="dataset-results" style="margin-top: 20px; text-align: center;">
             <!-- Results will be displayed here -->
         </div>
@@ -54,5 +58,22 @@
     </div>
 
     <script src="/js/chatbot.js"></script>
+    <script>
+        // Auto-login if user_id in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+        if (userId) {
+            currentUserId = userId;
+            document.getElementById('welcome-section').style.display = 'none';
+            document.getElementById('dataset-section').style.display = 'block';
+            // Set chatbot link
+            const chatbotLink = document.getElementById('chatbot-link');
+            if (chatbotLink) {
+                chatbotLink.href = `chatbot.html?user_id=${currentUserId}`;
+            }
+            // Load dataset
+            loadDataset(userId);
+        }
+    </script>
 </body>
 </html>
