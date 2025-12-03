@@ -23,6 +23,14 @@ let optionListenersAttached = false;
 
 // Initialize chatbot if on separate page
 if (chatbotSection && chatbotSection.style.display === 'block' && !mainButtons) {
+    // Set currentUserId from URL if not set
+    if (!currentUserId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user_id');
+        if (userId) {
+            currentUserId = userId;
+        }
+    }
     document.getElementById('chat-output').innerHTML = '<div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>';
     resetChatOptions();
     attachOptionListeners();
@@ -533,7 +541,19 @@ if (searchInput) {
 
 // Handle item selection
 document.addEventListener('click', async (event) => {
-    if (event.target.classList.contains('item-option-btn')) {
+    if (event.target.classList.contains('clickable-recommendation')) {
+        selectedItem = event.target.dataset.book;
+        currentSearchType = 'recommendation';
+        agregarMensaje(selectedItem, 'usuario');
+        agregarMensaje(`Asistente: Has seleccionado el libro "${selectedItem}". ¿Qué deseas hacer?`, 'asistente');
+        document.getElementById('item-options').innerHTML = `
+            <button class="action-btn" id="breve-sinopsis">Breve sinopsis</button>
+            <button class="action-btn" id="informacion">Información</button>
+            <button class="action-btn" id="inicio">Inicio</button>
+        `;
+        document.getElementById('item-options').style.display = 'block';
+        document.getElementById('chat-options').style.display = 'none';
+    } else if (event.target.classList.contains('item-option-btn')) {
         selectedItem = event.target.dataset.item;
         console.log('Item selected:', selectedItem, 'currentSearchType:', currentSearchType);
         document.getElementById('search-input-container').style.display = 'none';
@@ -635,26 +655,55 @@ document.addEventListener('click', async (event) => {
         agregarMensaje('Usar como recomendación', 'usuario');
         if (!currentUserId) {
             agregarMensaje('Asistente: Debes iniciar sesión para usar esta funcionalidad.', 'asistente');
+            resetChatOptions();
         } else {
-            // Send to server to add recommendation
-            fetch('/add-recommendation', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: currentUserId, book: selectedItem })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    agregarMensaje('Asistente: Libro agregado a tus recomendaciones.', 'asistente');
-                } else {
-                    agregarMensaje('Asistente: Error al agregar recomendación.', 'asistente');
+            // Hide item options and show rating
+            document.getElementById('item-options').style.display = 'none';
+            document.getElementById('rating-section').style.display = 'block';
+            // Generate radio buttons
+            const ratingOptions = document.getElementById('rating-options');
+            ratingOptions.innerHTML = '';
+            for (let i = 1; i <= 10; i++) {
+                const label = document.createElement('label');
+                label.style.margin = '0 5px';
+                label.innerHTML = `<input type="radio" name="rating" value="${i}" style="margin-right: 5px;"> ${i}`;
+                ratingOptions.appendChild(label);
+            }
+            // Attach submit listener
+            document.getElementById('submit-rating').onclick = () => {
+                const selected = document.querySelector('input[name="rating"]:checked');
+                if (!selected) {
+                    alert('Por favor, selecciona una calificación.');
+                    return;
                 }
-            })
-            .catch(() => {
-                agregarMensaje('Asistente: Error al conectar con el servidor.', 'asistente');
-            });
+                const rating = selected.value;
+                // Send to server
+                fetch('/add-recommendation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: currentUserId, book: selectedItem, rating: rating })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        agregarMensaje('Asistente: Gracias por tu calificación. El libro ha sido agregado a tus recomendaciones.', 'asistente');
+                        if (data.recommendations && data.recommendations.length > 0) {
+                            const recList = '<ul class="books-list">' + data.recommendations.map(book => `<li class="clickable-recommendation" data-book="${escapeHtml(book)}">${escapeHtml(book)}</li>`).join('') + '</ul>';
+                            agregarMensaje(`Asistente: Basado en tu calificación, aquí tienes algunas recomendaciones:${recList}`, 'asistente', true);
+                        }
+                    } else {
+                        agregarMensaje('Asistente: Error al agregar recomendación.', 'asistente');
+                    }
+                    document.getElementById('rating-section').style.display = 'none';
+                    resetChatOptions();
+                })
+                .catch(() => {
+                    agregarMensaje('Asistente: Error al conectar con el servidor.', 'asistente');
+                    document.getElementById('rating-section').style.display = 'none';
+                    resetChatOptions();
+                });
+            };
         }
-        resetChatOptions();
     } else if (event.target.id === 'informacion-autor') {
         agregarMensaje('Información', 'usuario');
         try {
@@ -727,6 +776,7 @@ function resetChatOptions() {
     document.getElementById('search-input-container').style.display = 'none';
     document.getElementById('item-options').style.display = 'none';
     document.getElementById('gemini-section').style.display = 'none';
+    document.getElementById('rating-section').style.display = 'none';
     document.getElementById('search-input').value = '';
     document.getElementById('search-list').innerHTML = '';
     currentSearchType = null;

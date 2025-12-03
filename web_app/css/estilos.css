@@ -483,6 +483,16 @@ section p {
     background-color: rgba(126, 34, 206, 0.1);
 }
 
+.asistente .clickable-recommendation {
+    cursor: pointer;
+    padding: 2px 0;
+    transition: background-color 0.3s;
+}
+
+.asistente .clickable-recommendation:hover {
+    background-color: rgba(126, 34, 206, 0.1);
+}
+
 .asistente .clickable-search-result {
     cursor: pointer;
     padding: 2px 0;

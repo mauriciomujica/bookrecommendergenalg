@@ -205,12 +205,13 @@ def search_books():
     try:
         # Load the books CSV
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
-        df = pd.read_csv(csv_path, delimiter=";",
-            encoding="ISO-8859-1",
-            on_bad_lines="skip",
-            dtype={"Year-Of-Publication": str})
-
+        #csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        #df = pd.read_csv(csv_path, delimiter=";",
+        #    encoding="ISO-8859-1",
+        #    on_bad_lines="skip",
+        #    dtype={"Year-Of-Publication": str})
+        csv_path = os.path.join(base_dir, "books_data", "books_info.csv")
+        df = pd.read_csv(csv_path, dtype={"Year-Of-Publication": str})
         # Filter books by title (case-insensitive partial match)
         matches = df[df["Book-Title"].str.lower().str.contains(query, na=False)]["Book-Title"].unique().tolist()
         # Sort by relevance: exact match > starts with > contains
@@ -232,11 +233,13 @@ def search_authors():
     try:
         # Load the books CSV
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
-        df = pd.read_csv(csv_path, delimiter=";",
-            encoding="ISO-8859-1",
-            on_bad_lines="skip",
-            dtype={"Year-Of-Publication": str})
+        #csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        #df = pd.read_csv(csv_path, delimiter=";",
+        #    encoding="ISO-8859-1",
+        #    on_bad_lines="skip",
+        #    dtype={"Year-Of-Publication": str})
+        csv_path = os.path.join(base_dir, "books_data", "books_info.csv")
+        df = pd.read_csv(csv_path, dtype={"Year-Of-Publication": str})
 
         # Filter authors by name (case-insensitive partial match)
         matches = df[df["Book-Author"].str.lower().str.contains(query, na=False)]["Book-Author"].unique().tolist()
@@ -258,11 +261,13 @@ def get_books_by_author():
     try:
         # Load the books CSV
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
-        df = pd.read_csv(csv_path, delimiter=";",
-            encoding="ISO-8859-1",
-            on_bad_lines="skip",
-            dtype={"Year-Of-Publication": str})
+        #csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        #df = pd.read_csv(csv_path, delimiter=";",
+        #    encoding="ISO-8859-1",
+        #    on_bad_lines="skip",
+        #    dtype={"Year-Of-Publication": str})
+        csv_path = os.path.join(base_dir, "books_data", "books_info.csv")
+        df = pd.read_csv(csv_path, dtype={"Year-Of-Publication": str})
 
         # Filter books by exact author match
         print(f"DEBUG: Filtering books for author: '{author}'")
@@ -329,12 +334,13 @@ def get_book_info_csv():
     try:
         # Load the books CSV
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
-        df = pd.read_csv(csv_path, delimiter=";",
-            encoding="ISO-8859-1",
-            on_bad_lines="skip",
-            dtype={"Year-Of-Publication": str})
-
+        #csv_path = os.path.join(base_dir, "books_data", "books_data_og", "books.csv")
+        #df = pd.read_csv(csv_path, delimiter=";",
+        #    encoding="ISO-8859-1",
+        #    on_bad_lines="skip",
+        #    dtype={"Year-Of-Publication": str})
+        csv_path = os.path.join(base_dir, "books_data", "books_info.csv")
+        df = pd.read_csv(csv_path, dtype={"Year-Of-Publication": str})
         # Find the book (case-insensitive exact match)
         book_row = df[df["Book-Title"].str.lower() == book_title.lower()]
         if book_row.empty:
@@ -353,6 +359,50 @@ def get_book_info_csv():
         }
 
         return jsonify(info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/add-recommendation", methods=["POST"])
+def add_recommendation():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    book = data.get("book")
+    rating = data.get("rating")
+
+    if not user_id or not book or not rating:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    try:
+        # Load the books CSV to find ISBN
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        books_csv = os.path.join(base_dir, "books_data", "books_info.csv")
+        df_books = pd.read_csv(books_csv, dtype={"Year-Of-Publication": str})
+
+        # Find ISBN for the book title (case-insensitive exact match)
+        book_row = df_books[df_books["Book-Title"].str.lower() == book.lower()]
+        if book_row.empty:
+            return jsonify({"error": "Book not found"}), 404
+
+        isbn = book_row.iloc[0]["ISBN"]
+
+        # Append to ratings.csv
+        ratings_csv = os.path.join(base_dir, "books_data", "ratings.csv")
+        df_ratings = pd.read_csv(ratings_csv)
+
+        new_row = pd.DataFrame({
+            "userID": [int(user_id)],
+            "ISBN": [isbn],
+            "Book-Rating": [int(rating)]
+        })
+        df_ratings = pd.concat([df_ratings, new_row], ignore_index=True)
+        df_ratings.to_csv(ratings_csv, index=False)
+
+        # Generate recommendations
+        bestMem = web_to_alg.main([isbn], int(user_id))
+        recommendations = list(bestMem.values())
+
+        return jsonify({"success": True, "recommendations": recommendations})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
