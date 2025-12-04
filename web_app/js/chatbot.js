@@ -793,8 +793,7 @@ function resetChatOptions() {
 document.addEventListener('click', async (event) => {
     if (event.target.id === 'inicio') {
         agregarMensaje('Inicio', 'usuario');
-        // Clear chat and show initial options
-        document.getElementById('chat-output').innerHTML = '<div class="asistente">¡Hola! Soy tu asistente de recomendación de lecturas. ¿En qué puedo ayudarte hoy?</div>';
+        agregarMensaje('Asistente: Ok, volviendo al Inicio', 'asistente');
         resetChatOptions();
         return;
     }

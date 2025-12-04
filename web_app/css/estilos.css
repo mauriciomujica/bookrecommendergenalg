@@ -134,7 +134,7 @@ section p {
 .section-card, .section-flip, .section-fade, .section-slide, .section-zoom {
   opacity: 0;
   transform: translateY(40px);
-  transition: opacity 1s ease, transform 1s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 .visible { opacity: 1 !important; transform: translateY(0) scale(1) rotateY(0) !important; }
 
@@ -288,7 +288,7 @@ section p {
 /* ---------------- Login Form Styles ---------------- */
 .btn {
   padding: 8px 20px;
-  border-radius: 0;
+  border-radius: 8px;
   overflow: hidden;
   position: relative;
   background: linear-gradient(90deg, var(--accent), var(--secondary));
