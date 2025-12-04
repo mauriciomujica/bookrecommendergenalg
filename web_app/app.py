@@ -149,6 +149,11 @@ def receive_selected():
         # Use userid in the processing logic
         bestMem = web_to_alg.main(cleaned, userid)
 
+        # Load books info for additional data
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        csv_path = os.path.join(base_dir, "books_data", "books_info.csv")
+        df = pd.read_csv(csv_path, dtype={"Year-Of-Publication": str})
+
         # Generate synopses for each recommended book using Gemini API
         synopses = []
         synopsis_prompt = "Genera una breve sinopsis en español (máximo 3 oraciones) para el siguiente libro. Responde solo con la sinopsis, sin títulos ni formato adicional:"
@@ -159,6 +164,15 @@ def receive_selected():
 
             # bestMem is a dictionary with ISBN as key and title as value
             for isbn, book_title in bestMem.items():
+                # Get author and image_url
+                row = df[df["ISBN"] == isbn]
+                if not row.empty:
+                    author = row.iloc[0]["Book-Author"]
+                    image_url = row.iloc[0]["Image-URL-L"]
+                else:
+                    author = "Unknown"
+                    image_url = ""
+
                 # Generate synopsis for each book using the title
                 full_prompt = f"{synopsis_prompt} {book_title}"
                 response = model.generate_content(full_prompt)
@@ -166,16 +180,23 @@ def receive_selected():
 
                 # Add synopsis to the book data
                 synopses.append(
-                    {"isbn": isbn, "title": book_title, "synopsis": synopsis}
+                    {"isbn": isbn, "title": book_title, "author": author, "image_url": image_url, "synopsis": synopsis}
                 )
 
         except Exception as e:
             # If synopsis generation fails, return books without synopses
             print(f"Error generating synopses: {str(e)}")
             # Convert dictionary to list format for fallback
-            synopses = [
-                {"isbn": isbn, "title": title} for isbn, title in bestMem.items()
-            ]
+            synopses = []
+            for isbn, title in bestMem.items():
+                row = df[df["ISBN"] == isbn]
+                if not row.empty:
+                    author = row.iloc[0]["Book-Author"]
+                    image_url = row.iloc[0]["Image-URL-L"]
+                else:
+                    author = "Unknown"
+                    image_url = ""
+                synopses.append({"isbn": isbn, "title": title, "author": author, "image_url": image_url})
 
         # Return results with synopses
         web_to_alg.progress_callback(0, 0, "complete")

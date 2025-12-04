@@ -596,8 +596,27 @@ section p {
 }
 
 .checkbox-item input[type="checkbox"] {
-  margin-right: 10px;
-  transform: scale(1.2);
+   margin-right: 10px;
+   transform: scale(1.2);
+}
+
+.checkbox-item img {
+   margin-right: 10px;
+   border-radius: 4px;
+}
+
+.checkbox-item div p {
+   margin: 0;
+   font-size: 14px;
+}
+
+.checkbox-item div p:first-child {
+   font-weight: bold;
+}
+
+.checkbox-item div p:last-child {
+   font-style: italic;
+   color: #666;
 }
 
 .checkbox-controls {

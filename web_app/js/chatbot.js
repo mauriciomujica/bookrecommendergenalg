@@ -175,11 +175,10 @@ async function loadDataset(userId) {
         const response = await fetch(`/search-csv?user_id=${encodeURIComponent(userId)}`);
         if (response.ok) {
             const data = await response.json();
-            if (data.results && Object.keys(data.results).length > 0) {
-                // Create checkbox grid from object values (titles), with keys (ISBNs) as values
-                const results = Object.entries(data.results);
-                const listHtml = results.map(([isbn, title], idx) => {
-                    return `<div class="checkbox-item"><label><input type="checkbox" data-index="${idx}" value="${escapeHtml(isbn)}"> ${escapeHtml(title)}</label></div>`;
+            if (data.results && data.results.length > 0) {
+                // Create checkbox grid from array of book objects
+                const listHtml = data.results.map((book, idx) => {
+                    return `<div class="checkbox-item"><label><input type="checkbox" data-index="${idx}" value="${escapeHtml(book.isbn)}"> <img src="${escapeHtml(book.image_url)}" alt="Cover" style="width:50px; height:auto; margin-right:10px;"> <div><p>${escapeHtml(book.title)}</p><p>by ${escapeHtml(book.author)}</p></div></label></div>`;
                 }).join('');
 
                 datasetResults.innerHTML = `<div class="checkbox-list">${listHtml}</div>`;
@@ -287,23 +286,27 @@ function displayRecommendations(books, container) {
     function updateDisplay() {
         const book = books[currentIndex];
         const title = escapeHtml(book.title || `Libro ${currentIndex + 1}`);
+        const author = escapeHtml(book.author || 'Autor desconocido');
+        const image_url = escapeHtml(book.image_url || '');
         const synopsis = escapeHtml(book.synopsis || 'Sinopsis no disponible');
 
         const html = `
             <div class="recommendation-card">
-                 <div class="card-header">
-                     <h3>Recomendación ${currentIndex + 1} de ${books.length}</h3>
-                 </div>
-                 <div class="card-content">
-                     <h4>${title}</h4>
-                     <p>${synopsis}</p>
-                 </div>
-                 <div class="card-navigation">
-                     <button id="prev-btn" ${currentIndex === 0 ? 'disabled' : ''}>Anterior</button>
-                     <button id="next-btn" ${currentIndex === books.length - 1 ? 'disabled' : ''}>Siguiente</button>
-                 </div>
-             </div>
-         `;
+                  <div class="card-header">
+                      <h3>Recomendación ${currentIndex + 1} de ${books.length}</h3>
+                  </div>
+                  <div class="card-content">
+                      ${image_url ? `<img src="${image_url}" alt="Cover" style="max-width: 150px; height: auto; margin-bottom: 10px; border-radius: 8px;">` : ''}
+                      <h4>${title}</h4>
+                      <p>by ${author}</p>
+                      <p>${synopsis}</p>
+                  </div>
+                  <div class="card-navigation">
+                      <button id="prev-btn" ${currentIndex === 0 ? 'disabled' : ''}>Anterior</button>
+                      <button id="next-btn" ${currentIndex === books.length - 1 ? 'disabled' : ''}>Siguiente</button>
+                  </div>
+              </div>
+          `;
 
         container.innerHTML = html;
 

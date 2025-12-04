@@ -16,8 +16,13 @@ def get_names(books, base_dir):
     except FileNotFoundError:
         print("No se encuentran los datasets. Ejecutar download_data.py primero")
         sys.exit()
-    nombres = {}
+    nombres = []
     for book in books:
-        nombre = books_og.loc[book]["Book-Title"]
-        nombres[book] = nombre
+        row = books_og.loc[book]
+        nombres.append({
+            "isbn": book,
+            "title": row["Book-Title"],
+            "author": row["Book-Author"],
+            "image_url": row["Image-URL-L"]
+        })
     return nombres
