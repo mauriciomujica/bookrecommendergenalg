@@ -6,14 +6,11 @@ import os
 def get_names(books, base_dir):
     try:
         csv_path = os.path.join(
-            base_dir, "../bookrecommendergenalg/books_data/books_data_og/books.csv"
+            base_dir, "../bookrecommendergenalg/books_data/books_info.csv"
         )
         books_og = pd.read_csv(
             csv_path,
             index_col="ISBN",
-            delimiter=";",
-            encoding="ISO-8859-1",
-            on_bad_lines="skip",
             dtype={"Year-Of-Publication": str},
         ).sort_index()
     except FileNotFoundError:
