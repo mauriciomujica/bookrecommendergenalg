@@ -50,8 +50,9 @@
         </div>
         <div id="rating-section" style="display: none; text-align: center; margin: 10px 0;">
             <p>¿Cuánto te gustó este libro? (1-10)</p>
-            <div id="rating-options" style="margin: 10px 0;">
-                <!-- Radio buttons will be inserted here -->
+            <div style="margin: 20px 0;">
+                <input type="range" id="rating-slider" min="1" max="10" value="5" style="width: 200px;">
+                <span id="rating-value" style="font-size: 18px; font-weight: bold; margin-left: 10px;">5</span>
             </div>
             <button id="submit-rating" class="btn-accent" style="margin-top: 10px;">Enviar</button>
         </div>

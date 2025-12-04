@@ -213,7 +213,7 @@ def search_books():
         csv_path = os.path.join(base_dir, "books_data", "books_info.csv")
         df = pd.read_csv(csv_path, dtype={"Year-Of-Publication": str})
         # Filter books by title (case-insensitive partial match)
-        matches = df[df["Book-Title"].str.lower().str.contains(query, na=False)]["Book-Title"].unique().tolist()
+        matches = df[df["Book-Title"].str.lower().str.contains(query, na=False, regex=False)]["Book-Title"].unique().tolist()
         # Sort by relevance: exact match > starts with > contains
         matches = sorted(matches, key=lambda x: (-get_relevance(x, query), x))
         # Limit to top 20 matches

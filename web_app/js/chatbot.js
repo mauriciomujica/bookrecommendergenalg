@@ -660,23 +660,16 @@ document.addEventListener('click', async (event) => {
             // Hide item options and show rating
             document.getElementById('item-options').style.display = 'none';
             document.getElementById('rating-section').style.display = 'block';
-            // Generate radio buttons
-            const ratingOptions = document.getElementById('rating-options');
-            ratingOptions.innerHTML = '';
-            for (let i = 1; i <= 10; i++) {
-                const label = document.createElement('label');
-                label.style.margin = '0 5px';
-                label.innerHTML = `<input type="radio" name="rating" value="${i}" style="margin-right: 5px;"> ${i}`;
-                ratingOptions.appendChild(label);
-            }
+            // Update value display
+            const slider = document.getElementById('rating-slider');
+            const valueDisplay = document.getElementById('rating-value');
+            valueDisplay.textContent = slider.value;
+            slider.addEventListener('input', () => {
+                valueDisplay.textContent = slider.value;
+            });
             // Attach submit listener
             document.getElementById('submit-rating').onclick = () => {
-                const selected = document.querySelector('input[name="rating"]:checked');
-                if (!selected) {
-                    alert('Por favor, selecciona una calificación.');
-                    return;
-                }
-                const rating = selected.value;
+                const rating = slider.value;
                 // Send to server
                 fetch('/add-recommendation', {
                     method: 'POST',
