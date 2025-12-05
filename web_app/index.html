@@ -70,9 +70,8 @@
       <div class="tech-item">🐍 Python</div>
       <div class="tech-item">💬 IA Conversacional</div>
       <div class="tech-item">🧠 Algoritmos Genéticos</div>
-      <div class="tech-item">🗃️ PostgreSQL / MongoDB</div>
-      <div class="tech-item">⚙️ Django (Backend)</div>
-      <div class="tech-item">💻 React / HTML / CSS</div>
+      <div class="tech-item">⚙️ Flask (Framework)</div>
+      <div class="tech-item">💻 HTML / CSS / JavaScript</div>
     </div>
   </section>
 
@@ -147,14 +146,12 @@ selectors.forEach(sel => {
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
-          setTimeout(() => {
-            el.classList.add('visible');
-            // Deja de observar para que el elemento permanezca visible
-            obs.unobserve(el);
-          }, 800);
+          el.classList.add('visible');
+          // Deja de observar para que el elemento permanezca visible
+          obs.unobserve(el);
         }
       });
-    }, { threshold: 0.6 });
+    }, { threshold: 0.1 });
     obs.observe(el);
   });
 });
