@@ -25,12 +25,12 @@ mensajes = [{"role": "system", "content": contexto}]
 
 @app.route("/")
 def home():
-    return send_from_directory(".", "index.html")
+    return send_from_directory("pages", "index.html")
 
 
 @app.route("/index.html")
 def index():
-    return send_from_directory(".", "index.html")
+    return send_from_directory("pages", "index.html")
 
 
 @app.route("/pages/nosotros.html")
@@ -45,12 +45,12 @@ def contact():
 
 @app.route("/dataset.html")
 def dataset():
-    return send_from_directory(".", "dataset.html")
+    return send_from_directory("pages", "dataset.html")
 
 
 @app.route("/chatbot.html")
 def chatbot():
-    return send_from_directory(".", "chatbot.html")
+    return send_from_directory("pages", "chatbot.html")
 
 
 @app.route("/js/<path:filename>")
