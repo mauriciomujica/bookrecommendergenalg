@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 import pandas as pd
 import json
 import queue
-from bookrecommendergenalg.web_app.scripts_py import return_names_chatbot, web_to_alg
+from .scripts_py import return_names_chatbot, web_to_alg
+
 
 load_dotenv()
 app = Flask(__name__)
